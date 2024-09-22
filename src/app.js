@@ -2,6 +2,7 @@ import express from "express";
 import morgan from "morgan";
 import createHttpError from "http-errors";
 import rateLimit from "express-rate-limit";
+import userRoute from "./routes/userRoute.js";
 
 const rateLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -16,11 +17,9 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan("dev")),
 
+    // Application routing
+    app.use("/api/v1/", userRoute)
 
-
-    app.get("/test", (req, res) => {
-        res.status(200).send("Wellcome to my server....")
-    })
 
 // client error handling
 app.use((req, res, next) => {
