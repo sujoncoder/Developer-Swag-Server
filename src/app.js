@@ -2,7 +2,9 @@ import express from "express";
 import morgan from "morgan";
 import createHttpError from "http-errors";
 import rateLimit from "express-rate-limit";
-import userRoute from "./routes/userRoute.js";
+import userRoute from "./routes/userRouter.js";
+import seedRouter from "./routes/seedRouter.js";
+import { errorResponse } from "./helpers/responseController.js";
 
 const rateLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -18,7 +20,8 @@ app.use(express.urlencoded({ extended: true }))
 app.use(morgan("dev")),
 
     // Application routing
-    app.use("/api/v1/", userRoute)
+    app.use("/api/v1/users", userRoute)
+app.use("/api/v1/seed", seedRouter)
 
 
 // client error handling
@@ -29,8 +32,8 @@ app.use((req, res, next) => {
 
 // server error handling ==> finaly all eroor handle here
 app.use((err, req, res, next) => {
-    return res.status(err.status || 500).json({
-        success: false,
+    return errorResponse(res, {
+        statusCode: err.status,
         message: err.message
     })
 })
