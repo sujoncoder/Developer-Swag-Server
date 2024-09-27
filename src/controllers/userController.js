@@ -6,6 +6,7 @@ import deleteImage from "../helpers/deleteImage.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
 import { clientUrl, jwtActivitionKey } from "../secret.js";
 import emailWithNodeMailer from "../helpers/email.js";
+import jwt from "jsonwebtoken"
 
 
 // Get all user
@@ -116,32 +117,52 @@ export const processRegister = async (req, res, next) => {
 
 
         // Prepare email
+        // Prepare email
         const emailData = {
             email,
-            subject: "Activate Your Developer Swags Account",
+            subject: "🚀 Welcome to Developer Swags! Activate Your Account Now",
             html: `
-    <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6; background-color: #f4f4f4;">
-        <div style="max-width: 600px; margin: auto; background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
-            <h2 style="color: #333;">Hello ${name},</h2>
-            <p style="font-size: 16px; color: #555;">
-                Welcome to Developer Swags! To activate your account and join our community, please click the button below:
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; padding: 30px; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="https://cdn-icons-png.flaticon.com/512/4997/4997543.png" alt="Developer Swags" style="width: 120px; margin-bottom: 10px;">
+                <h1 style="color: #007bff; font-size: 24px;">Welcome to Developer Swags!</h1>
+            </div>
+
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                Hello <strong>${name}</strong>,
             </p>
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="${clientUrl}/api/v1/users/activate/${token}" target="_blank" style="display: inline-block; background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                We're excited to have you on board! You're just one step away from joining our vibrant community of developers. Please click the button below to activate your account and start exploring the best swags for coders.
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${clientUrl}/api/v1/users/activate/${token}" target="_blank" style="display: inline-block; background-color: #007bff; color: white; font-size: 16px; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                     Activate Your Account
                 </a>
             </div>
-            <p style="font-size: 14px; color: #777;">
-                If you didn’t sign up for a Developer Swags account, feel free to ignore this email.
+            <p style="font-size: 14px; color: #888; line-height: 1.6;">
+                If you did not sign up for this account, please ignore this email or contact our support.
             </p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="font-size: 12px; color: #888; text-align: center;">
-                &copy; 2024 Developer Swags. All rights reserved.
-            </p>
+
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 40px 0;">
+            
+            <div style="text-align: center;">
+                <p style="font-size: 12px; color: #aaa;">Need help? Contact us at <a href="mailto:support@developerswags.com" style="color: #007bff; text-decoration: none;">support@developerswags.com</a></p>
+                <p style="font-size: 12px; color: #aaa;">&copy; 2024 Developer Swags. All Rights Reserved.</p>
+                <div style="margin-top: 10px;">
+                    <a href="https://facebook.com/developerswags" target="_blank">
+                        <img src="https://icon-url/facebook.png" alt="Facebook" style="width: 24px; margin: 0 5px;">
+                    </a>
+                    <a href="https://twitter.com/developerswags" target="_blank">
+                        <img src="https://icon-url/twitter.png" alt="Twitter" style="width: 24px; margin: 0 5px;">
+                    </a>
+                    <a href="https://instagram.com/developerswags" target="_blank">
+                        <img src="https://icon-url/instagram.png" alt="Instagram" style="width: 24px; margin: 0 5px;">
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
-    `
-        };
+    </div>  `};
 
 
         // send mail with node mailer
@@ -161,3 +182,41 @@ export const processRegister = async (req, res, next) => {
         next(error)
     }
 }
+
+
+// Verify user account
+export const activateUserAccount = async (req, res, next) => {
+    const token = req.body.token;
+
+    if (!token) {
+        return next(createError(404, "Token not found!"));
+    }
+
+    try {
+        const decoded = jwt.verify(token, jwtActivitionKey);
+
+        if (!decoded) {
+            return next(createError(401, "User was not able to be verified."));
+        }
+
+        const userExist = await User.exists({ email: decoded.email });
+        if (userExist) {
+            return next(createError(409, "User with this email already exists, Please login."));
+        }
+
+        await User.create(decoded);
+
+        return successResponse(res, {
+            statusCode: 201,
+            message: "User was registered successfully.",
+        });
+    } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            return next(createError(401, "Token has expired"));
+        } else if (error.name === "JsonWebTokenError") {
+            return next(createError(401, "Invalid Token"));
+        } else {
+            return next(error); // Ensure the error gets passed to the error-handling middleware
+        }
+    }
+};
