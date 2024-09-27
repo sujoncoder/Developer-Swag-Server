@@ -3,20 +3,21 @@ import { activateUserAccount, deleteUserById, getUserById, getUsers, processRegi
 import upload from "../middlewares/uploadFile.js";
 import { validateUserRegisteration } from "../validators/auth.js";
 import runValidation from "../validators/index.js";
+import isLoggedIn from "../middlewares/auth.js";
 
-const userRoute = express.Router();
+const userRouter = express.Router();
 
-userRoute.post("/process-register",
+userRouter.post("/process-register",
     upload.single("image"),
     validateUserRegisteration,
     runValidation,
     processRegister
 );
 
-userRoute.post("/verify", activateUserAccount);
-userRoute.get("/", getUsers);
-userRoute.get("/:id", getUserById);
-userRoute.delete("/:id", deleteUserById);
-userRoute.put("/:id", upload.single("image"), updateUserById);
+userRouter.post("/verify", activateUserAccount);
+userRouter.get("/", isLoggedIn, getUsers);
+userRouter.get("/:id", isLoggedIn, getUserById);
+userRouter.delete("/:id", deleteUserById);
+userRouter.put("/:id", upload.single("image"), updateUserById);
 
-export default userRoute;
+export default userRouter;
