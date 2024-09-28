@@ -82,9 +82,6 @@ export const deleteUserById = async (req, res, next) => {
 
         const user = await findWithId(User, id, options)
 
-        const userImagePath = user.image;
-        deleteImage(userImagePath)
-
         await User.findByIdAndDelete({
             _id: id,
             isAdmin: false
@@ -276,5 +273,57 @@ export const updateUserById = async (req, res, next) => {
 
     } catch (error) {
         next(error)
+    }
+}
+
+
+// Handle ban user by id
+export const handleBanUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+        await findWithId(User, userId);
+        const updates = { isBanned: true }
+        const updateOptions = { new: true, runValidators: true, context: "query" }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password")
+
+        if (!updatedUser) {
+            throw createError(404, "user was not banned successfully.")
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User was banned successfully"
+        })
+
+    } catch (error) {
+        return (next)
+    }
+}
+
+
+
+
+// Handle unban user by id
+export const handleUnBanUserById = async (req, res, next) => {
+    try {
+        const userId = req.params.id;
+        await findWithId(User, userId);
+        const updates = { isBanned: false }
+        const updateOptions = { new: true, runValidators: true, context: "query" }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password")
+
+        if (!updatedUser) {
+            throw createError(404, "user was not banned successfully.")
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User was un-banned successfully"
+        })
+
+    } catch (error) {
+        return (next)
     }
 }

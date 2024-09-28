@@ -25,7 +25,8 @@ export const handleLogin = async (req, res, next) => {
             throw createError(403, "You are Banned. Please contact authority.")
         }
 
-        const accessToken = createJsonWebToken({ _id: user._id }, jwtAccessKey, "10m"
+
+        const accessToken = createJsonWebToken({ user }, jwtAccessKey, "15m"
         )
 
         res.cookie("accessToken", accessToken, {
@@ -35,11 +36,12 @@ export const handleLogin = async (req, res, next) => {
             sameSite: "none"
         })
 
+        const userWithOutPassword = await User.findOne({ email }).select("-password");
 
         return successResponse(res, {
             statusCode: 200,
             message: "User loggedin successfully.",
-            payload: { user }
+            payload: { userWithOutPassword }
         })
     } catch (error) {
         next(error)

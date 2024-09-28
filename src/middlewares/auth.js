@@ -2,23 +2,58 @@ import createError from "http-errors";
 import jwt from "jsonwebtoken"
 import { jwtAccessKey } from "../secret.js";
 
-const isLoggedIn = async (req, res, next) => {
+export const isLoggedIn = async (req, res, next) => {
     try {
-        const token = req.cookies.accessToken;
-        if (!token) {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
             throw createError(401, "Access token not found. Please login")
         }
 
-        const decoded = await jwt.verify(token, jwtAccessKey)
+        const decoded = await jwt.verify(accessToken, jwtAccessKey)
 
         if (!decoded) {
             throw createError(401, "Invalid access token. Please login again")
         }
-        req.body.userId = decoded._id
+        req.user = decoded.user
         next()
     } catch (error) {
         return next(error)
     }
 }
 
-export default isLoggedIn;
+
+// isLogout middleware
+export const isLoggedOut = async (req, res, next) => {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (accessToken) {
+            try {
+                const decoded = jwt.verify(accessToken, jwtAccessKey)
+                if (decoded) {
+                    throw createError(400, "User is already logged in")
+                }
+            } catch (error) {
+                throw (error)
+            }
+        }
+
+        next()
+    } catch (error) {
+        return next(error)
+    }
+}
+
+
+// isAdmin middleware
+export const isAdmin = async (req, res, next) => {
+    try {
+        console.log("request user is...", req.user.isAdmin)
+
+        if (!req.user.isAdmin) {
+            throw createError(403, "Forbidden. You must be an admin to access this resource")
+        }
+        next();
+    } catch (error) {
+        return next(error)
+    }
+}
