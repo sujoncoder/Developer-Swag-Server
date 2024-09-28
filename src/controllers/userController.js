@@ -2,11 +2,13 @@ import createError from "http-errors";
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
 import { findWithId } from "../services/findItem.js";
-import deleteImage from "../helpers/deleteImage.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
 import { clientUrl, jwtActivitionKey } from "../secret.js";
 import emailWithNodeMailer from "../helpers/email.js";
 import jwt from "jsonwebtoken"
+import handleUserAction from "../services/userService.js";
+
+
 
 
 // Get all user
@@ -95,7 +97,6 @@ export const deleteUserById = async (req, res, next) => {
         next(error)
     }
 }
-
 
 
 // Process register
@@ -276,24 +277,17 @@ export const updateUserById = async (req, res, next) => {
     }
 }
 
-
-// Handle ban user by id
-export const handleBanUserById = async (req, res, next) => {
+// Handle manage user status by id
+export const handleManageUserStatusById = async (req, res, next) => {
     try {
         const userId = req.params.id;
-        await findWithId(User, userId);
-        const updates = { isBanned: true }
-        const updateOptions = { new: true, runValidators: true, context: "query" }
+        const action = req.body.action;
 
-        const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password")
-
-        if (!updatedUser) {
-            throw createError(404, "user was not banned successfully.")
-        }
+        const successMessage = await handleUserAction(action, userId)
 
         return successResponse(res, {
             statusCode: 200,
-            message: "User was banned successfully"
+            message: successMessage,
         })
 
     } catch (error) {
@@ -304,26 +298,3 @@ export const handleBanUserById = async (req, res, next) => {
 
 
 
-// Handle unban user by id
-export const handleUnBanUserById = async (req, res, next) => {
-    try {
-        const userId = req.params.id;
-        await findWithId(User, userId);
-        const updates = { isBanned: false }
-        const updateOptions = { new: true, runValidators: true, context: "query" }
-
-        const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password")
-
-        if (!updatedUser) {
-            throw createError(404, "user was not banned successfully.")
-        }
-
-        return successResponse(res, {
-            statusCode: 200,
-            message: "User was un-banned successfully"
-        })
-
-    } catch (error) {
-        return (next)
-    }
-}

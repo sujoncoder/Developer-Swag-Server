@@ -1,5 +1,5 @@
 import express from "express";
-import { activateUserAccount, deleteUserById, getUserById, getUsers, handleBanUserById, handleUnBanUserById, processRegister, updateUserById } from "../controllers/userController.js";
+import { activateUserAccount, deleteUserById, getUserById, getUsers, handleManageUserStatusById, processRegister, updateUserById } from "../controllers/userController.js";
 import upload from "../middlewares/uploadFile.js";
 import { validateUserRegisteration } from "../validators/auth.js";
 import runValidation from "../validators/index.js";
@@ -20,7 +20,6 @@ userRouter.get("/", isLoggedIn, isAdmin, getUsers);
 userRouter.get("/:id", isLoggedIn, getUserById);
 userRouter.delete("/:id", deleteUserById);
 userRouter.put("/:id", upload.single("image"), updateUserById);
-userRouter.put("/ban-user/:id", isLoggedIn, isAdmin, handleBanUserById);
-userRouter.put("/unban-user/:id", isLoggedIn, isAdmin, handleUnBanUserById);
+userRouter.put("/manage-user/:id", isLoggedIn, isAdmin, handleManageUserStatusById);
 
 export default userRouter;
