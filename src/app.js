@@ -10,7 +10,7 @@ import authRouter from "./routers/authRouter.js";
 
 const rateLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 5,
+    max: 20,
     message: "Too many requests from this IP. Please try again later."
 })
 

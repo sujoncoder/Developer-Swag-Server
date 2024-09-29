@@ -67,3 +67,33 @@ export const validateUserLogin = [
         .matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/)
         .withMessage("Password must contain at least one uppercase letter, one number, and one special character"),
 ];
+
+
+// Login validation
+export const validateUserPasswordUpdate = [
+    body("oldPassword")
+        .trim()
+        .notEmpty()
+        .withMessage("Old password is required. Enter your Old password")
+        .isLength({ min: 6 })
+        .withMessage("Old password should be at least 6 characters long")
+        .matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/)
+        .withMessage("Old password must contain at least one uppercase letter, one number, and one special character"),
+
+    body("newPassword")
+        .trim()
+        .notEmpty()
+        .withMessage("New password is required. Enter your password")
+        .isLength({ min: 6 })
+        .withMessage("New password should be at least 6 characters long")
+        .matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/)
+        .withMessage("New password must contain at least one uppercase letter, one number, and one special character"),
+
+    body("confirmedPassword").custom((value, { req }) => {
+        if (value !== req.body.newPassword) {
+            throw new Error("Password did not match")
+        }
+        return true
+    })
+];
+

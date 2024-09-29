@@ -1,4 +1,7 @@
 import createError from "http-errors";
+import bcrypt from "bcryptjs";
+
+
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
 import { findWithId } from "../services/findItem.js";
@@ -6,7 +9,7 @@ import { createJsonWebToken } from "../helpers/jsonWebToken.js";
 import { clientUrl, jwtActivitionKey } from "../secret.js";
 import emailWithNodeMailer from "../helpers/email.js";
 import jwt from "jsonwebtoken"
-import { findUsers, handleUserAction } from "../services/userService.js";
+import { deleteUserById, findUserById, findUsers, handleUserAction, updateUserById } from "../services/userService.js";
 
 
 
@@ -34,14 +37,13 @@ export const getUsers = async (req, res, next) => {
 }
 
 
-
 // Get a single user by ID
 export const getUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
 
-        const user = await findWithId(User, id, options)
+        const user = await findUserById(id, options)
 
         return successResponse(res, {
             statusCode: 200,
@@ -56,17 +58,12 @@ export const getUserById = async (req, res, next) => {
 
 
 // Delete single user by ID
-export const deleteUserById = async (req, res, next) => {
+export const handleDeleteUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
 
-        const user = await findWithId(User, id, options)
-
-        await User.findByIdAndDelete({
-            _id: id,
-            isAdmin: false
-        })
+        await deleteUserById(id, options)
 
         return successResponse(res, {
             statusCode: 200,
@@ -212,43 +209,15 @@ export const activateUserAccount = async (req, res, next) => {
 
 
 // Update user by Id
-export const updateUserById = async (req, res, next) => {
+export const handleUpdateUserById = async (req, res, next) => {
     try {
         const userId = req.params.id;
-        const options = { password: 0 }
-        await findWithId(User, userId, options)
 
-        const updateOptions = { new: true, runValidators: true, context: "query" }
-
-        let updates = {}
-
-        for (let key in req.body) {
-            if (["name", "password", "phone", "address"].includes(key)) {
-                updates[key] = req.body[key];
-            } else if (["email"].includes(key)) {
-                throw new Error("Email can not be updated")
-            }
-        }
-
-        const image = req.file;
-
-        if (image) {
-            if (image.size > 1024 * 1024 * 2) {
-                throw new Error("File too large. It nust be less then 2 MB")
-            }
-            updates.image = image.buffer.toString("base64")
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password")
-
-        if (!updatedUser) {
-            throw createError(404, "User with this Id does not exist")
-        }
-
+        const updateddUser = await updateUserById(userId, req)
         return successResponse(res, {
             statusCode: 200,
             message: "User was updated successfully",
-            payload: updatedUser
+            payload: updateddUser
         })
 
     } catch (error) {
@@ -271,6 +240,45 @@ export const handleManageUserStatusById = async (req, res, next) => {
 
     } catch (error) {
         return (next)
+    }
+}
+
+// handle update password
+export const handleUpdatePassword = async (req, res, next) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+
+        const userId = req.params.id;
+        const user = await findWithId(User, userId)
+
+        // compare the password
+        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password)
+        if (!isPasswordMatch) {
+            throw createError(400, "Old password is not correct")
+        }
+
+        // const filter = { userId };
+        // const update = { $set: { password: newPassword } }
+        // const updateOptions = { new: true }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { password: newPassword },
+            { new: true }
+
+        ).select("-password")
+
+        if (!updatedUser) {
+            throw createError(400, "user was not updated successfully")
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User password updated successfully",
+            payload: { updatedUser }
+        })
+    } catch (error) {
+        next(error)
     }
 }
 
