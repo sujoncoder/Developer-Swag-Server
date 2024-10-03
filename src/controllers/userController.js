@@ -1,15 +1,15 @@
 import createError from "http-errors";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"
 
 
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
 import { findWithId } from "../services/findItem.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
-import { clientUrl, jwtActivitionKey } from "../secret.js";
+import { clientUrl, jwtActivitionKey, jwtResetPasswordKey } from "../secret.js";
 import emailWithNodeMailer from "../helpers/email.js";
-import jwt from "jsonwebtoken"
-import { deleteUserById, findUserById, findUsers, handleUserAction, updateUserById } from "../services/userService.js";
+import { deleteUserById, findUserById, findUsers, forgetPasswordByEmail, handleUserAction, resetPassword, updateUserById, updateUserPasswordById } from "../services/userService.js";
 
 
 
@@ -101,8 +101,6 @@ export const processRegister = async (req, res, next) => {
         // create token
         const token = createJsonWebToken({ name, email, password, phone, address, image: imageBufferString }, jwtActivitionKey, "10m")
 
-
-        // Prepare email
         // Prepare email
         const emailData = {
             email,
@@ -243,34 +241,14 @@ export const handleManageUserStatusById = async (req, res, next) => {
     }
 }
 
-// handle update password
+// Handle update password
 export const handleUpdatePassword = async (req, res, next) => {
     try {
-        const { oldPassword, newPassword } = req.body;
+        const { email, oldPassword, newPassword, confirmedPassword } = req.body;
 
         const userId = req.params.id;
-        const user = await findWithId(User, userId)
 
-        // compare the password
-        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password)
-        if (!isPasswordMatch) {
-            throw createError(400, "Old password is not correct")
-        }
-
-        // const filter = { userId };
-        // const update = { $set: { password: newPassword } }
-        // const updateOptions = { new: true }
-
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { password: newPassword },
-            { new: true }
-
-        ).select("-password")
-
-        if (!updatedUser) {
-            throw createError(400, "user was not updated successfully")
-        }
+        const updatedUser = await updateUserPasswordById(userId, email, oldPassword, newPassword, confirmedPassword)
 
         return successResponse(res, {
             statusCode: 200,
@@ -282,6 +260,39 @@ export const handleUpdatePassword = async (req, res, next) => {
     }
 }
 
+
+// Handle forget user password
+export const handleForgetPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const token = await forgetPasswordByEmail(email)
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: `Please go to your ${email} for reseting the password.`,
+            payload: token,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+// Handle reset user password
+export const handleResetPassword = async (req, res, next) => {
+    try {
+        const { token, password } = req.body;
+        await resetPassword(token, password);
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "Password reset successfully",
+        })
+    } catch (error) {
+        next(error)
+    }
+}
 
 
 

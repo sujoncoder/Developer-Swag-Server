@@ -1,7 +1,7 @@
 import express from "express";
-import { activateUserAccount, getUserById, getUsers, handleDeleteUserById, handleManageUserStatusById, handleUpdatePassword, handleUpdateUserById, processRegister } from "../controllers/userController.js";
+import { activateUserAccount, getUserById, getUsers, handleDeleteUserById, handleForgetPassword, handleManageUserStatusById, handleResetPassword, handleUpdatePassword, handleUpdateUserById, processRegister } from "../controllers/userController.js";
 import upload from "../middlewares/uploadFile.js";
-import { validateUserPasswordUpdate, validateUserRegisteration } from "../validators/auth.js";
+import { validateUserForgetPassword, validateUserPasswordUpdate, validateUserRegisteration, validateUserResetPassword } from "../validators/auth.js";
 import runValidation from "../validators/index.js";
 import { isAdmin, isLoggedIn, isLoggedOut } from "../middlewares/auth.js"
 
@@ -33,8 +33,19 @@ userRouter.put("/:id([0-9a-fA-F]{24})", isLoggedIn, upload.single("image"), hand
 // Handle only admin can banned & unbanned user account
 userRouter.put("/manage-user/:id([0-9a-fA-F]{24})", isLoggedIn, isAdmin, handleManageUserStatusById);
 
-// handle user can update her own account password
+
+
+// Handle user can update her own account password
 userRouter.put("/update-password/:id([0-9a-fA-F]{24})", validateUserPasswordUpdate, runValidation, isLoggedIn, handleUpdatePassword)
+
+
+// Handle user forget password
+userRouter.post("/forget-password", validateUserForgetPassword, runValidation, handleForgetPassword)
+
+
+// Handle reset password
+userRouter.put("/reset-password", validateUserResetPassword, runValidation, handleResetPassword)
+
 
 
 export default userRouter;

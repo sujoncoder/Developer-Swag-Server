@@ -48,7 +48,6 @@ export const validateUserRegisteration = [
 ];
 
 
-
 // Login validation
 export const validateUserLogin = [
     body("email")
@@ -69,7 +68,7 @@ export const validateUserLogin = [
 ];
 
 
-// Login validation
+// Password update validation
 export const validateUserPasswordUpdate = [
     body("oldPassword")
         .trim()
@@ -95,5 +94,35 @@ export const validateUserPasswordUpdate = [
         }
         return true
     })
+];
+
+
+//  Forget password validation
+export const validateUserForgetPassword = [
+    body("email")
+        .trim()
+        .notEmpty()
+        .withMessage("Email is required. Enter your email")
+        .isEmail()
+        .withMessage("Invalid email address"),
+];
+
+
+//  Reset password validation
+export const validateUserResetPassword = [
+    body("token")
+        .trim()
+        .notEmpty()
+        .withMessage("Token is missing"),
+
+    body("password")
+        .trim()
+        .notEmpty()
+        .withMessage("Password is required. Enter your password")
+        .isLength({ min: 6 })
+        .withMessage("Password should be at least 6 characters long")
+        .matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/)
+        .withMessage("Password must contain at least one uppercase letter, one number, and one special character"),
+
 ];
 
