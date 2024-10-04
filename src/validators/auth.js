@@ -123,6 +123,5 @@ export const validateUserResetPassword = [
         .withMessage("Password should be at least 6 characters long")
         .matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/)
         .withMessage("Password must contain at least one uppercase letter, one number, and one special character"),
-
 ];
 

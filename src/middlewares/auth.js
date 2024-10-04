@@ -2,6 +2,8 @@ import createError from "http-errors";
 import jwt from "jsonwebtoken"
 import { jwtAccessKey } from "../secret.js";
 
+
+// handle isLoggedin middleware
 export const isLoggedIn = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
@@ -22,7 +24,7 @@ export const isLoggedIn = async (req, res, next) => {
 }
 
 
-// isLogout middleware
+// Handle isLogout middleware
 export const isLoggedOut = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
@@ -44,7 +46,7 @@ export const isLoggedOut = async (req, res, next) => {
 }
 
 
-// isAdmin middleware
+// Handle isAdmin middleware
 export const isAdmin = async (req, res, next) => {
     try {
         console.log("request user is...", req.user.isAdmin)

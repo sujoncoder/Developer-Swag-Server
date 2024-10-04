@@ -1,10 +1,15 @@
 import createError from "http-errors";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
-import bcrypt from "bcryptjs";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
-import { jwtAccessKey } from "../secret.js";
+import { jwtAccessKey, jwtRefreshKey } from "../secret.js";
+import { setAccessTokenCookie, setRefreshTokenCookie } from "../helpers/cookies.js";
 
+
+// Handle login
 export const handleLogin = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -25,18 +30,19 @@ export const handleLogin = async (req, res, next) => {
             throw createError(403, "You are Banned. Please contact authority.")
         }
 
-
-        const accessToken = createJsonWebToken({ user }, jwtAccessKey, "15m"
+        // create access token
+        const accessToken = createJsonWebToken({ user }, jwtAccessKey, "5m"
         )
+        setAccessTokenCookie(res, accessToken)
 
-        res.cookie("accessToken", accessToken, {
-            maxAge: 15 * 60 * 1000,  // 15 min
-            httpOnly: true,
-            // secure: true,
-            sameSite: "none"
-        })
+        // create refresh token
+        const refreshToken = createJsonWebToken({ user }, jwtRefreshKey, "7d"
+        )
+        setRefreshTokenCookie(res, refreshToken)
 
-        const userWithOutPassword = await User.findOne({ email }).select("-password");
+
+        const userWithOutPassword = user.toObject();
+        delete userWithOutPassword.password;
 
         return successResponse(res, {
             statusCode: 200,
@@ -52,6 +58,7 @@ export const handleLogin = async (req, res, next) => {
 export const handleLogout = async (req, res, next) => {
     try {
         res.clearCookie("accessToken")
+        res.clearCookie("refreshToken")
         return successResponse(res, {
             statusCode: 200,
             message: "User logout Successfully",
@@ -61,3 +68,54 @@ export const handleLogout = async (req, res, next) => {
         next(error)
     }
 };
+
+// Handle refresh token
+export const handleRefreshToken = async (req, res, next) => {
+    try {
+        const oldRefreshToken = req.cookies.refreshToken;
+        // verify the old refresh token
+        const decodedToken = jwt.verify(oldRefreshToken, jwtRefreshKey)
+
+        if (!decodedToken) {
+            throw createError(401, "Invalid refresh token. Please login")
+        }
+
+        // create access token
+        const accessToken = createJsonWebToken(
+            decodedToken.user,
+            jwtAccessKey,
+            "5m"
+        )
+
+        setAccessTokenCookie(res, accessToken)
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "New access token is generated",
+            payload: {}
+        })
+    } catch (error) {
+        next(error)
+    }
+};
+
+// Handle protected route
+export const handleProtectedRoute = async (req, res, next) => {
+    try {
+        const accessToken = req.cookies.accessToken;
+        const decodedToken = jwt.verify(accessToken, jwtAccessKey)
+
+        if (!decodedToken) {
+            throw createError(401, "Invalid access token. Please login first")
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "Protected resources accessed successfull",
+            payload: {}
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}

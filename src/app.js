@@ -7,6 +7,7 @@ import userRouter from "./routers/userRouter.js";
 import seedRouter from "./routers/seedRouter.js";
 import { errorResponse } from "./helpers/responseController.js";
 import authRouter from "./routers/authRouter.js";
+import categoryRouter from "./routers/categoryRouter.js";
 
 const rateLimiter = rateLimit({
     windowMs: 1 * 60 * 1000,
@@ -27,6 +28,7 @@ app.use(morgan("dev"))
 // Application routing
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/auth", authRouter)
+app.use("/api/v1/categories", categoryRouter)
 app.use("/api/v1/seed", seedRouter)
 
 

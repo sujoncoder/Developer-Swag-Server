@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
 import { clientUrl, jwtResetPasswordKey } from "../secret.js";
 import emailWithNodeMailer from "../helpers/email.js";
+import sendEmail from "../helpers/sendEmail.js";
 
 
 
@@ -29,7 +30,7 @@ export const findUsers = async (search, limit, page) => {
 
         const count = await User.find(filter).countDocuments();
 
-        if (!users) throw createError(404, "No user found !")
+        if (!users || users.length === 0) throw createError(404, "No user found !")
 
         return {
             users,
@@ -70,12 +71,13 @@ export const updateUserById = async (userId, req) => {
         const updateOptions = { new: true, runValidators: true, context: "query" }
 
         let updates = {}
+        const allowedFields = ["name", "password", "phone", "address"];
 
-        for (let key in req.body) {
-            if (["name", "password", "phone", "address"].includes(key)) {
+        for (const key in req.body) {
+            if (allowedFields.includes(key)) {
                 updates[key] = req.body[key];
-            } else if (["email"].includes(key)) {
-                throw new Error("Email can not be updated")
+            } else if (key === "email") {
+                throw createError(400, "Email can not be updated")
             }
         }
 
@@ -128,7 +130,7 @@ export const updateUserPasswordById = async (userId, email, oldPassword, newPass
         const user = await User.findOne({ email: email })
 
         if (!user) {
-            throw createError(404, "Useris not found with this email.")
+            throw createError(404, "User is not found with this email.")
         }
 
         if (newPassword !== confirmedPassword) {
@@ -138,7 +140,7 @@ export const updateUserPasswordById = async (userId, email, oldPassword, newPass
         // compare the password
         const isPasswordMatch = await bcrypt.compare(oldPassword, user.password)
         if (!isPasswordMatch) {
-            throw createError(400, "Old password is not correct")
+            throw createError(400, "Old password is incorrect")
         }
 
 
@@ -225,12 +227,7 @@ export const forgetPasswordByEmail = async (email) => {
 
 
         // send mail with node mailer
-        try {
-            await emailWithNodeMailer(emailData)
-        } catch (emailError) {
-            next(createError(500, "Failed to send reset password email"))
-            return;
-        }
+        sendEmail(emailData)
 
         return token;
     } catch (error) {

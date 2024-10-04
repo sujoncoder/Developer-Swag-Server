@@ -14,6 +14,8 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+
+
 // Function to send email using the configured transporter
 const emailWithNodeMailer = async (emailData) => {
     try {

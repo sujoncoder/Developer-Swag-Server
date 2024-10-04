@@ -1,21 +1,20 @@
 import createError from "http-errors";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"
 
 
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
-import { findWithId } from "../services/findItem.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
-import { clientUrl, jwtActivitionKey, jwtResetPasswordKey } from "../secret.js";
+import { clientUrl, jwtActivitionKey } from "../secret.js";
 import emailWithNodeMailer from "../helpers/email.js";
 import { deleteUserById, findUserById, findUsers, forgetPasswordByEmail, handleUserAction, resetPassword, updateUserById, updateUserPasswordById } from "../services/userService.js";
-
+import checkUserExist from "../helpers/checkUserExist.js";
+import sendEmail from "../helpers/sendEmail.js";
 
 
 
 // Get all user
-export const getUsers = async (req, res, next) => {
+export const handleGetUsers = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = Number(req.query.page) || 1;
@@ -36,9 +35,8 @@ export const getUsers = async (req, res, next) => {
     }
 }
 
-
 // Get a single user by ID
-export const getUserById = async (req, res, next) => {
+export const handleGetUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -55,7 +53,6 @@ export const getUserById = async (req, res, next) => {
         next(error)
     }
 }
-
 
 // Delete single user by ID
 export const handleDeleteUserById = async (req, res, next) => {
@@ -74,9 +71,8 @@ export const handleDeleteUserById = async (req, res, next) => {
     }
 }
 
-
 // Process register
-export const processRegister = async (req, res, next) => {
+export const handleProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
@@ -92,7 +88,7 @@ export const processRegister = async (req, res, next) => {
 
         const imageBufferString = image.buffer.toString("base64")
 
-        const userExist = await User.exists({ email: email });
+        const userExist = await checkUserExist(email)
 
         if (userExist) {
             throw createError(409, "user with this email already exist. please login")
@@ -150,26 +146,19 @@ export const processRegister = async (req, res, next) => {
 
 
         // send mail with node mailer
-        try {
-            await emailWithNodeMailer(emailData)
-        } catch (emailError) {
-            next(createError(500, "Failed to send verification email"))
-            return;
-        }
+        sendEmail(emailData)
 
         return successResponse(res, {
             statusCode: 200,
             message: `Please go to your ${email} for completing your registration process.`,
-            payload: { token }
         })
     } catch (error) {
         next(error)
     }
 }
 
-
 // Verify user account
-export const activateUserAccount = async (req, res, next) => {
+export const handleActivateUserAccount = async (req, res, next) => {
     const token = req.body.token;
 
     if (!token) {
@@ -204,7 +193,6 @@ export const activateUserAccount = async (req, res, next) => {
         }
     }
 };
-
 
 // Update user by Id
 export const handleUpdateUserById = async (req, res, next) => {
@@ -260,7 +248,6 @@ export const handleUpdatePassword = async (req, res, next) => {
     }
 }
 
-
 // Handle forget user password
 export const handleForgetPassword = async (req, res, next) => {
     try {
@@ -270,14 +257,13 @@ export const handleForgetPassword = async (req, res, next) => {
 
         return successResponse(res, {
             statusCode: 200,
-            message: `Please go to your ${email} for reseting the password.`,
+            message: `Please go to your ${email} to reset the password.`,
             payload: token,
         })
     } catch (error) {
         next(error)
     }
 }
-
 
 // Handle reset user password
 export const handleResetPassword = async (req, res, next) => {

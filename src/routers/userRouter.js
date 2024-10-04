@@ -1,5 +1,5 @@
 import express from "express";
-import { activateUserAccount, getUserById, getUsers, handleDeleteUserById, handleForgetPassword, handleManageUserStatusById, handleResetPassword, handleUpdatePassword, handleUpdateUserById, processRegister } from "../controllers/userController.js";
+import { handleActivateUserAccount, handleDeleteUserById, handleForgetPassword, handleGetUserById, handleGetUsers, handleManageUserStatusById, handleProcessRegister, handleResetPassword, handleUpdatePassword, handleUpdateUserById, } from "../controllers/userController.js";
 import upload from "../middlewares/uploadFile.js";
 import { validateUserForgetPassword, validateUserPasswordUpdate, validateUserRegisteration, validateUserResetPassword } from "../validators/auth.js";
 import runValidation from "../validators/index.js";
@@ -12,17 +12,17 @@ userRouter.post("/process-register",
     isLoggedOut,
     validateUserRegisteration,
     runValidation,
-    processRegister
+    handleProcessRegister
 );
 
 // Handle verify user account after sending a email clicking verify link
-userRouter.post("/verify", isLoggedOut, activateUserAccount);
+userRouter.post("/verify", isLoggedOut, handleActivateUserAccount);
 
 // Handle get users see only admin
-userRouter.get("/", isLoggedIn, isAdmin, getUsers);
+userRouter.get("/", isLoggedIn, isAdmin, handleGetUsers);
 
 // Handle get single user only admin using id
-userRouter.get("/:id([0-9a-fA-F]{24})", isLoggedIn, getUserById);
+userRouter.get("/:id([0-9a-fA-F]{24})", isLoggedIn, handleGetUserById);
 
 // Handle user delete her own accoun using id
 userRouter.delete("/:id([0-9a-fA-F]{24})", handleDeleteUserById);
@@ -32,7 +32,6 @@ userRouter.put("/:id([0-9a-fA-F]{24})", isLoggedIn, upload.single("image"), hand
 
 // Handle only admin can banned & unbanned user account
 userRouter.put("/manage-user/:id([0-9a-fA-F]{24})", isLoggedIn, isAdmin, handleManageUserStatusById);
-
 
 
 // Handle user can update her own account password
@@ -45,7 +44,6 @@ userRouter.post("/forget-password", validateUserForgetPassword, runValidation, h
 
 // Handle reset password
 userRouter.put("/reset-password", validateUserResetPassword, runValidation, handleResetPassword)
-
 
 
 export default userRouter;
