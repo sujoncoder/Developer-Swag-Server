@@ -1,4 +1,6 @@
-import { Schema, Types, model } from "mongoose";
+import { Schema, model } from "mongoose";
+
+import { defaultImagePath } from "../secret.js";
 
 const productSchema = new Schema(
     {
@@ -52,9 +54,8 @@ const productSchema = new Schema(
             default: 0
         },
         image: {
-            type: Buffer,
-            contentType: String,
-            required: [true, "Product image is required"]
+            type: String,
+            default: defaultImagePath
         },
         category: {
             type: Schema.Types.ObjectId,

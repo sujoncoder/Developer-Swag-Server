@@ -61,7 +61,6 @@ export const findUserById = async (id, options = {}) => {
     }
 }
 
-
 // Handle update user by ID.
 export const updateUserById = async (userId, req) => {
     try {

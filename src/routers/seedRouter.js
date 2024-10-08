@@ -1,12 +1,13 @@
 import express from "express";
+
 import { seedProducts, seedUsers } from "../controllers/seedController.js";
-import upload from "../middlewares/uploadFile.js";
+import { uploadProductImage, uploadUserImage } from "../middlewares/uploadFile.js";
 const seedRouter = express.Router();
 
 // user seed router
-seedRouter.get("/users", upload.single("image"), seedUsers);
+seedRouter.get("/users", uploadUserImage.single("image"), seedUsers);
 
 // products seed router
-seedRouter.get("/products", upload.single("image"), seedProducts);
+seedRouter.get("/products", uploadProductImage.single("image"), seedProducts);
 
 export default seedRouter;

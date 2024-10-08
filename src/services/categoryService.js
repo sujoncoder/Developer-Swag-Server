@@ -18,7 +18,7 @@ export const getCategories = async () => {
 
 // Gat category
 export const getCategory = async (slug) => {
-    return await Category.find({ slug }).select("name slug").lean();
+    return await Category.findOne({ slug }).select("name slug").lean();
 }
 
 // Update category

@@ -11,6 +11,15 @@ export const handleCreateCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
 
+        // Check if category with the same name exists
+        const existingCategory = await Category.findOne({ name });
+        if (existingCategory) {
+            return res.status(400).json({
+                success: false,
+                message: "Category with this name already exists",
+            });
+        }
+
         await createCategory(name);
 
         return successResponse(res, {
@@ -36,23 +45,26 @@ export const handleGetCategories = async (req, res, next) => {
     }
 }
 
-// Get category
+// Handle Get Category by Slug
 export const handleGetCategory = async (req, res, next) => {
     try {
         const { slug } = req.params;
+
+        // Fetch the category by slug
         const category = await getCategory(slug);
 
+        // If no category is found, throw a 404 error
         if (!category) {
-            throw createError(404, "Category not found")
+            throw createError(404, "Category not found");
         }
 
         return successResponse(res, {
             statusCode: 200,
-            message: "Category were fetched successfully",
+            message: "Category was fetched successfully",
             payload: category
-        })
+        });
     } catch (error) {
-        next(error)
+        next(error);
     }
 }
 

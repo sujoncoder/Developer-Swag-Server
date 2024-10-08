@@ -1,15 +1,15 @@
 import express from "express";
 
-import upload from "../middlewares/uploadFile.js";
-import { handleCreateProduct } from "../controllers/productController.js";
+import { uploadProductImage } from "../middlewares/uploadFile.js";
 import validateProduct from "../validators/product.js";
 import runValidation from "../validators/index.js";
 import { isLoggedIn, isAdmin } from "../middlewares/auth.js";
+import { handleCreateProduct } from "../controllers/productController.js";
 
 const productRouter = express.Router();
 
-// post product route
-productRouter.post("/", upload.single("image"), validateProduct, runValidation, isLoggedIn, isAdmin, handleCreateProduct);
+// create a product route
+productRouter.post("/", isLoggedIn, isAdmin, uploadProductImage.single("image"), handleCreateProduct);
 
 
 export default productRouter;

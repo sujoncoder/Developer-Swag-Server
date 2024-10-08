@@ -33,6 +33,11 @@ export const validateProduct = [
         .withMessage("Quantity is required")
         .isLength({ min: 1 })
         .withMessage("Quantity name must be a positive number"),
+
+    body("image")
+        .optional()
+        .isString()
+        .withMessage("Product image is optional")
 ];
 
 export default validateProduct;

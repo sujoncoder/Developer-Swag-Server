@@ -22,7 +22,7 @@ const app = express()
 app.use(cookieParser())
 app.use(rateLimiter)
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"))
 
 

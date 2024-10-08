@@ -1,15 +1,16 @@
 import createError from "http-errors";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
 
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
 import { clientUrl, jwtActivitionKey } from "../secret.js";
-import emailWithNodeMailer from "../helpers/email.js";
-import { deleteUserById, findUserById, findUsers, forgetPasswordByEmail, handleUserAction, resetPassword, updateUserById, updateUserPasswordById } from "../services/userService.js";
+import { findUserById, findUsers, forgetPasswordByEmail, handleUserAction, resetPassword, updateUserPasswordById } from "../services/userService.js";
 import checkUserExist from "../helpers/checkUserExist.js";
 import sendEmail from "../helpers/sendEmail.js";
+import { findWithId } from "../services/findItem.js";
+import deleteImage from "../helpers/deleteImage.js";
 
 
 
@@ -59,8 +60,16 @@ export const handleDeleteUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
+        const user = await findWithId(User, id, options);
 
-        await deleteUserById(id, options)
+        await User.findByIdAndDelete({
+            _id: id,
+            isAdmin: false
+        });
+
+        if (user & user.image) {
+            await deleteImage(user.image)
+        };
 
         return successResponse(res, {
             statusCode: 200,
@@ -76,7 +85,10 @@ export const handleProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
-        const image = req.file;
+        const image = req.file.path;
+        if (image && image.size > 1024 * 1024 * 2) {
+            throw createError(400, "File too large it must be less than 2 MB")
+        }
 
         if (!image) {
             throw createError(400, "Image is required")
@@ -86,16 +98,25 @@ export const handleProcessRegister = async (req, res, next) => {
             throw new Error("File is too large. It must be less then 2 MB")
         }
 
-        const imageBufferString = image.buffer.toString("base64")
+        const userExists = await checkUserExist(email)
 
-        const userExist = await checkUserExist(email)
-
-        if (userExist) {
+        if (userExists) {
             throw createError(409, "user with this email already exist. please login")
         }
+        const tokenPayload = {
+            name,
+            email,
+            password,
+            phone,
+            address,
+        };
+
+        if (image) {
+            tokenPayload.image = image
+        };
 
         // create token
-        const token = createJsonWebToken({ name, email, password, phone, address, image: imageBufferString }, jwtActivitionKey, "10m")
+        const token = createJsonWebToken(tokenPayload, jwtActivitionKey, "10m")
 
         // Prepare email
         const emailData = {
@@ -151,6 +172,7 @@ export const handleProcessRegister = async (req, res, next) => {
         return successResponse(res, {
             statusCode: 200,
             message: `Please go to your ${email} for completing your registration process.`,
+            payload: token
         })
     } catch (error) {
         next(error)
@@ -195,21 +217,60 @@ export const handleActivateUserAccount = async (req, res, next) => {
 };
 
 // Update user by Id
+// Update user by Id
 export const handleUpdateUserById = async (req, res, next) => {
     try {
         const userId = req.params.id;
+        const options = { password: 0 };
 
-        const updateddUser = await updateUserById(userId, req)
+        const user = await findWithId(User, userId, options);
+
+        const updateOptions = { new: true, runValidators: true, context: "query" };
+
+        let updates = {};
+        const allowedFields = ["name", "password", "phone", "address"];
+
+        // Validate fields
+        for (const key in req.body) {
+            if (allowedFields.includes(key)) {
+                updates[key] = req.body[key];
+            } else if (key === "email") {
+                throw createError(400, "Email cannot be updated");
+            }
+        }
+
+        // Handle file upload
+        if (req.file) {
+            const image = req.file.path;
+
+            if (req.file.size > 1024 * 1024 * 2) {
+                throw new Error("File too large. It must be less than 2 MB");
+            }
+
+            updates.image = image;
+
+            if (user.image !== "default.jpeg") {
+                deleteImage(user.image);
+            }
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password");
+
+        if (!updatedUser) {
+            throw createError(404, "User with this ID does not exist");
+        }
+
         return successResponse(res, {
             statusCode: 200,
             message: "User was updated successfully",
-            payload: updateddUser
-        })
+            payload: updatedUser
+        });
 
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};
+
 
 // Handle manage user status by id
 export const handleManageUserStatusById = async (req, res, next) => {

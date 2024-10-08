@@ -1,6 +1,9 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
-import { defaultUserImagePath } from "../secret.js";
+
+
+
+import { defaultImagePath } from "../secret.js";
 
 
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -33,9 +36,8 @@ const userSchema = new Schema({
         set: (v) => bcrypt.hashSync(v, bcrypt.genSaltSync(10))
     },
     image: {
-        type: Buffer,
-        contentType: String,
-        required: [true, "User image is required"]
+        type: String,
+        default: defaultImagePath
     },
     address: {
         type: String,

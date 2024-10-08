@@ -1,14 +1,17 @@
 import express from "express";
+
 import { handleActivateUserAccount, handleDeleteUserById, handleForgetPassword, handleGetUserById, handleGetUsers, handleManageUserStatusById, handleProcessRegister, handleResetPassword, handleUpdatePassword, handleUpdateUserById, } from "../controllers/userController.js";
-import upload from "../middlewares/uploadFile.js";
 import { validateUserForgetPassword, validateUserPasswordUpdate, validateUserRegisteration, validateUserResetPassword } from "../validators/auth.js";
 import runValidation from "../validators/index.js";
 import { isAdmin, isLoggedIn, isLoggedOut } from "../middlewares/auth.js"
+import { uploadUserImage } from "../middlewares/uploadFile.js";
 
 const userRouter = express.Router();
 
+
+// Handle process register
 userRouter.post("/process-register",
-    upload.single("image"),
+    uploadUserImage.single("image"),
     isLoggedOut,
     validateUserRegisteration,
     runValidation,
@@ -28,7 +31,7 @@ userRouter.get("/:id([0-9a-fA-F]{24})", isLoggedIn, handleGetUserById);
 userRouter.delete("/:id([0-9a-fA-F]{24})", handleDeleteUserById);
 
 // Handle user upadate her own account using id
-userRouter.put("/:id([0-9a-fA-F]{24})", isLoggedIn, upload.single("image"), handleUpdateUserById);
+userRouter.put("/:id([0-9a-fA-F]{24})", isLoggedIn, uploadUserImage.single("image"), handleUpdateUserById);
 
 // Handle only admin can banned & unbanned user account
 userRouter.put("/manage-user/:id([0-9a-fA-F]{24})", isLoggedIn, isAdmin, handleManageUserStatusById);
