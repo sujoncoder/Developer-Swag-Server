@@ -26,10 +26,19 @@ export const handleCreateProduct = async (req, res, next) => {
 // Handle Get All Products
 export const handleGetAllProducts = async (req, res, next) => {
     try {
+        const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 4;
 
-        const products = await Product.find({})
+        const searchRegExp = new RegExp(".*" + search + ".*", "i");
+
+        const filter = {
+            $or: [
+                { name: { $regex: searchRegExp } },
+            ]
+        }
+
+        const products = await Product.find(filter)
             .populate("category")
             .skip((page - 1) * limit)
             .limit(limit)
@@ -39,7 +48,7 @@ export const handleGetAllProducts = async (req, res, next) => {
             throw createError(404, "No products found")
         };
 
-        const count = await Product.find({}).countDocuments();
+        const count = await Product.find(filter).countDocuments();
 
         return successResponse(res, {
             statusCode: 200,
