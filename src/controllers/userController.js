@@ -217,7 +217,6 @@ export const handleActivateUserAccount = async (req, res, next) => {
 };
 
 // Update user by Id
-// Update user by Id
 export const handleUpdateUserById = async (req, res, next) => {
     try {
         const userId = req.params.id;
