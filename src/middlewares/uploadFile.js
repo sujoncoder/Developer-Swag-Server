@@ -5,9 +5,9 @@ import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE, UPLOAD_PRODUCT_IMAGE_DIRECTORY, UPLO
 
 // USER STORAGE
 const userStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, UPLOAD_USER_IMAGE_DIRECTORY)
-    },
+    // destination: function (req, file, cb) {
+    //     cb(null, UPLOAD_USER_IMAGE_DIRECTORY)
+    // },
     filename: function (req, file, cb) {
         cb(null, Date.now() + "-" + file.originalname)
     }
@@ -16,9 +16,9 @@ const userStorage = multer.diskStorage({
 
 // PRODUCT STORAGE
 const productStorage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, UPLOAD_PRODUCT_IMAGE_DIRECTORY)
-    },
+    // destination: function (req, file, cb) {
+    //     cb(null, UPLOAD_PRODUCT_IMAGE_DIRECTORY)
+    // },
     filename: function (req, file, cb) {
         cb(null, Date.now() + "-" + file.originalname)
     }

@@ -1,27 +1,67 @@
 import createError from "http-errors";
+import slugify from "slugify";
+
 import { successResponse } from "../helpers/responseController.js"
 import Product from "../models/productModel.js";
-import { createProduct } from "../services/productService.js";
 import deleteImage from "../helpers/deleteImage.js";
-import slugify from "slugify";
+import cloudinary from "../config/cloudinary.js";
+import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
 
 // Handle Create Product
 export const handleCreateProduct = async (req, res, next) => {
     try {
+        // Extract product data from req.body
+        const { name, description, price, category, shipping, quantity } = req.body;
+
+        // Get image path from req.file
         const image = req.file?.path;
 
-        const product = await createProduct(req.body, image);
+        // Check if the file size is too large
+        if (image && image.size > 2 * 1024 * 1024) {
+            throw createError(400, "File too large. Must be under 2 MB");
+        };
+
+        let imageUrl;
+
+        if (image) {
+            const response = await cloudinary.uploader.upload(image, {
+                folder: "DeveloperSwags/products",
+            });
+
+            if (response?.secure_url) {
+                imageUrl = response.secure_url;
+            } else {
+                throw createError(500, "Failed to upload image to Cloudinary");
+            }
+        }
+
+        const productExists = await Product.exists({ name });
+        if (productExists) {
+            throw createError(409, "Product with this name already exists.");
+        }
+
+        const product = await Product.create({
+            name,
+            description,
+            price,
+            category,
+            shipping,
+            quantity,
+            image: imageUrl,
+            slug: slugify(name),
+        });
 
         return successResponse(res, {
             statusCode: 201,
-            message: "Product was created successfully",
-            payload: product
+            message: "Product created successfully",
+            payload: product,
         });
     } catch (error) {
         next(error);
     }
 };
+
 
 // Handle Get All Products
 export const handleGetAllProducts = async (req, res, next) => {
@@ -89,28 +129,30 @@ export const handleGetProduct = async (req, res, next) => {
     }
 };
 
-
 // Handle delete single product
 export const handleDeleteProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
 
+        // Find the product by slug and delete it
         const product = await Product.findOneAndDelete({ slug });
 
         if (!product) {
-            throw createError(404, "Product not found")
+            throw createError(404, "Product not found");
         }
 
         if (product.image) {
-            await deleteImage(product.image)
+            const publicId = await publicIdWithOutExtention(product.image);
+
+            await cloudinary.uploader.destroy(`DeveloperSwags/products/${publicId}`);
         }
 
         return successResponse(res, {
             statusCode: 200,
-            message: "Productd was deleted"
-        })
+            message: "Product was deleted",
+        });
     } catch (error) {
-        next(error)
+        next(error);
     }
 };
 

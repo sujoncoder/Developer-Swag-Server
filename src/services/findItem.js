@@ -8,7 +8,7 @@ export const findWithId = async (Model, id, options = {}) => {
 
         if (!item) {
             throw createError(404, `${Model.modelName} does not exist with this ID`)
-        }
+        };
 
         return item;
 
@@ -20,4 +20,4 @@ export const findWithId = async (Model, id, options = {}) => {
         }
         throw error
     }
-}
+};

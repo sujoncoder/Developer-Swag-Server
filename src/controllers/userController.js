@@ -1,7 +1,6 @@
 import createError from "http-errors";
 import jwt from "jsonwebtoken";
 
-
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
@@ -11,114 +10,44 @@ import checkUserExist from "../helpers/checkUserExist.js";
 import sendEmail from "../helpers/sendEmail.js";
 import { findWithId } from "../services/findItem.js";
 import deleteImage from "../helpers/deleteImage.js";
+import cloudinary from "../config/cloudinary.js";
+import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
-
-
-// Get all user
-export const handleGetUsers = async (req, res, next) => {
-    try {
-        const search = req.query.search || "";
-        const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 5;
-
-        const { users, pagination } = await findUsers(search, limit, page)
-
-        return successResponse(res, {
-            statusCode: 200,
-            message: "User were returned successfully",
-            payload: {
-                users: users,
-                pagination: pagination
-            }
-        })
-    } catch (error) {
-        next(error)
-    }
-}
-
-// Get a single user by ID
-export const handleGetUserById = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const options = { password: 0 };
-
-        const user = await findUserById(id, options)
-
-        return successResponse(res, {
-            statusCode: 200,
-            message: "User was returned successfully",
-            payload: { user }
-        })
-    } catch (error) {
-
-        next(error)
-    }
-}
-
-// Delete single user by ID
-export const handleDeleteUserById = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const options = { password: 0 };
-        const user = await findWithId(User, id, options);
-
-        await User.findByIdAndDelete({
-            _id: id,
-            isAdmin: false
-        });
-
-        if (user & user.image) {
-            await deleteImage(user.image)
-        };
-
-        return successResponse(res, {
-            statusCode: 200,
-            message: "User was deleted successfully"
-        })
-    } catch (error) {
-        next(error)
-    }
-}
 
 // Process register
 export const handleProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
+        if (!req.file) {
+            throw createError(400, "Image is required");
+        };
+
         const image = req.file.path;
-        if (image && image.size > 1024 * 1024 * 2) {
-            throw createError(400, "File too large it must be less than 2 MB")
-        }
 
-        if (!image) {
-            throw createError(400, "Image is required")
-        }
+        if (req.file.size > 2 * 1024 * 1024) {
+            throw createError(400, "File too large. It must be less than 2 MB");
+        };
 
-        if (image.size > 1024 * 1024 * 2) {
-            throw new Error("File is too large. It must be less then 2 MB")
-        }
-
-        const userExists = await checkUserExist(email)
+        const userExists = await checkUserExist(email);
 
         if (userExists) {
-            throw createError(409, "user with this email already exist. please login")
-        }
+            throw createError(409, "User with this email already exists. Please login.");
+        };
+
         const tokenPayload = {
             name,
             email,
             password,
             phone,
             address,
+            image,
         };
 
-        if (image) {
-            tokenPayload.image = image
-        };
+        // Create token
+        const token = createJsonWebToken(tokenPayload, jwtActivitionKey, "10m");
 
-        // create token
-        const token = createJsonWebToken(tokenPayload, jwtActivitionKey, "10m")
-
-        // Prepare email
+        // Prepare email data
         const emailData = {
             email,
             subject: "🚀 Welcome to Developer Swags! Activate Your Account Now",
@@ -163,21 +92,22 @@ export const handleProcessRegister = async (req, res, next) => {
                 </div>
             </div>
         </div>
-    </div>  `};
+    </div>  `
+        };
 
+        // Send email using your email service
+        await sendEmail(emailData);
 
-        // send mail with node mailer
-        sendEmail(emailData)
-
+        // Send success response
         return successResponse(res, {
             statusCode: 200,
-            message: `Please go to your ${email} for completing your registration process.`,
+            message: `Please check your ${email} to complete your registration process.`,
             payload: token
-        })
+        });
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};
 
 // Verify user account
 export const handleActivateUserAccount = async (req, res, next) => {
@@ -192,12 +122,21 @@ export const handleActivateUserAccount = async (req, res, next) => {
 
         if (!decoded) {
             return next(createError(401, "User was not able to be verified."));
-        }
+        };
 
         const userExist = await User.exists({ email: decoded.email });
         if (userExist) {
             return next(createError(409, "User with this email already exists, Please login."));
-        }
+        };
+
+        const image = decoded.image;
+
+        if (image) {
+            const response = await cloudinary.uploader.upload(image, {
+                folder: "DeveloperSwags/users"
+            });
+            decoded.image = response.secure_url;
+        };
 
         await User.create(decoded);
 
@@ -206,13 +145,83 @@ export const handleActivateUserAccount = async (req, res, next) => {
             message: "User was registered successfully.",
         });
     } catch (error) {
-        if (error.name === "TokenExpiredError") {
-            return next(createError(401, "Token has expired"));
-        } else if (error.name === "JsonWebTokenError") {
-            return next(createError(401, "Invalid Token"));
-        } else {
-            return next(error); // Ensure the error gets passed to the error-handling middleware
+        return next(error);
+    }
+};
+
+// Get all user
+export const handleGetUsers = async (req, res, next) => {
+    try {
+        const search = req.query.search || "";
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 5;
+
+        const { users, pagination } = await findUsers(search, limit, page)
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User were returned successfully",
+            payload: {
+                users: users,
+                pagination: pagination
+            }
+        })
+    } catch (error) {
+        next(error)
+    }
+};
+
+// Get a single user by ID
+export const handleGetUserById = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const options = { password: 0 };
+
+        const user = await findUserById(id, options)
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User was returned successfully",
+            payload: { user }
+        })
+    } catch (error) {
+
+        next(error)
+    }
+}
+
+// Delete single user by ID
+export const handleDeleteUserById = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const options = { password: 0 };
+        const user = await findWithId(User, id, options);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
+
+        // Check and delete user's image if it exists
+        if (user.image) {
+            const publicId = await publicIdWithOutExtention(user.image);
+
+            await cloudinary.uploader.destroy(`DeveloperSwags/users/${publicId}`);
+        }
+
+        // Delete user if not an admin
+        const deletedUser = await User.findByIdAndDelete(id);
+
+        if (!deletedUser || deletedUser.isAdmin) {
+            return res.status(403).json({ message: "Cannot delete admin users" });
+        }
+
+        return successResponse(res, {
+            statusCode: 200,
+            message: "User was deleted successfully"
+        });
+
+    } catch (error) {
+        next(error);
     }
 };
 
@@ -270,7 +279,6 @@ export const handleUpdateUserById = async (req, res, next) => {
     }
 };
 
-
 // Handle manage user status by id
 export const handleManageUserStatusById = async (req, res, next) => {
     try {
@@ -287,7 +295,7 @@ export const handleManageUserStatusById = async (req, res, next) => {
     } catch (error) {
         return (next)
     }
-}
+};
 
 // Handle update password
 export const handleUpdatePassword = async (req, res, next) => {
@@ -306,7 +314,7 @@ export const handleUpdatePassword = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
 // Handle forget user password
 export const handleForgetPassword = async (req, res, next) => {
@@ -323,7 +331,7 @@ export const handleForgetPassword = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
 // Handle reset user password
 export const handleResetPassword = async (req, res, next) => {
@@ -338,7 +346,7 @@ export const handleResetPassword = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
 
 

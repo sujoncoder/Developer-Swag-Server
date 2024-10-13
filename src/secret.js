@@ -21,3 +21,9 @@ export const smtpUsername = process.env.SMTP_USERNAME || "";
 export const smtpPassword = process.env.SMTP_PASSWORD || "zavd dzfl mtrq pqkl";
 
 export const clientUrl = process.env.CLIENT_URL || "http://localhost:3000/";
+
+export const cloudinaryName = process.env.CLOUDINARY_NAME || "di22w71uh";
+
+export const cloudinaryApi = process.env.CLOUDINARY_API || "899484181977763";
+
+export const cloudinarySecretKey = process.env.CLOUDINARY_SECRET_KEY || "AHVf5ybSmnJLTzfbbYTG_E5YQAU";

@@ -1,12 +1,11 @@
-import createError from "http-errors";
-import User from "../models/userModel.js";
-import deleteImage from "../helpers/deleteImage.js";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import createError from "http-errors";
+
+import User from "../models/userModel.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
 import { clientUrl, jwtResetPasswordKey } from "../secret.js";
-import emailWithNodeMailer from "../helpers/email.js";
 import sendEmail from "../helpers/sendEmail.js";
 
 
@@ -45,7 +44,7 @@ export const findUsers = async (search, limit, page) => {
     } catch (error) {
         throw error
     }
-}
+};
 
 // Handle find user by id for admin.
 export const findUserById = async (id, options = {}) => {
@@ -59,7 +58,7 @@ export const findUserById = async (id, options = {}) => {
         }
         throw error
     }
-}
+};
 
 // Handle update user by ID.
 export const updateUserById = async (userId, req) => {
@@ -102,26 +101,26 @@ export const updateUserById = async (userId, req) => {
         }
         throw error
     }
-}
+};
 
-// Handle delete user by ID
-export const deleteUserById = async (id, options = {}) => {
-    try {
-        const user = await User.findByIdAndDelete({
-            _id: id,
-            isAdmin: false
-        })
+// Handle update user password by ID
+// export const deleteUserById = async (id, options = {}) => {
+//     try {
+//         const user = await User.findByIdAndDelete({
+//             _id: id,
+//             isAdmin: false
+//         })
 
-        if (user && user.image) {
-            await deleteImage(user.image)
-        }
-    } catch (error) {
-        if (error instanceof mongoose.Error, castError) {
-            throw createError(400, "Invalid ID")
-        }
-        throw error
-    }
-}
+//         if (user && user.image) {
+//             await deleteImage(user.image)
+//         }
+//     } catch (error) {
+//         if (error instanceof mongoose.Error, castError) {
+//             throw createError(400, "Invalid ID")
+//         }
+//         throw error
+//     }
+// }
 
 // handle user password update by Id
 export const updateUserPasswordById = async (userId, email, oldPassword, newPassword, confirmedPassword) => {
@@ -158,8 +157,7 @@ export const updateUserPasswordById = async (userId, email, oldPassword, newPass
     } catch (error) {
         throw error
     }
-}
-
+};
 
 // Handle user forget password by id
 export const forgetPasswordByEmail = async (email) => {
@@ -232,8 +230,7 @@ export const forgetPasswordByEmail = async (email) => {
     } catch (error) {
         throw error
     }
-}
-
+};
 
 // handle reset user password
 export const resetPassword = async (token, password) => {
@@ -258,7 +255,7 @@ export const resetPassword = async (token, password) => {
     } catch (error) {
         throw error
     }
-}
+};
 
 // Handle user action.
 export const handleUserAction = async (action, userId) => {
@@ -293,4 +290,4 @@ export const handleUserAction = async (action, userId) => {
         }
         throw (error)
     }
-}
+};

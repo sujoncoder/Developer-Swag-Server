@@ -49,8 +49,6 @@ export const isLoggedOut = async (req, res, next) => {
 // Handle isAdmin middleware
 export const isAdmin = async (req, res, next) => {
     try {
-        console.log("request user is...", req.user.isAdmin)
-
         if (!req.user.isAdmin) {
             throw createError(403, "Forbidden. You must be an admin to access this resource")
         }
