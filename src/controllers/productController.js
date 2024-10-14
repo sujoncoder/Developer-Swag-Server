@@ -7,7 +7,7 @@ import cloudinary from "../config/cloudinary.js";
 import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
 
-// Handle Create Product
+// CREATE PRODUCT ==> ADMIN
 export const handleCreateProduct = async (req, res, next) => {
     try {
         // Extract product data from req.body
@@ -61,7 +61,8 @@ export const handleCreateProduct = async (req, res, next) => {
     }
 };
 
-// Handle Get All Products
+
+// GET ALL PRODUCTS
 export const handleGetAllProducts = async (req, res, next) => {
     try {
         const search = req.query.search || "";
@@ -107,7 +108,8 @@ export const handleGetAllProducts = async (req, res, next) => {
     }
 };
 
-// Handle get single product
+
+// GET SINGLE PRODUCT BY SLUG
 export const handleGetProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
@@ -127,7 +129,8 @@ export const handleGetProduct = async (req, res, next) => {
     }
 };
 
-// Handle delete single product
+
+// DELETE SINGLE PRODUCT BY SLUG
 export const handleDeleteProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
@@ -154,7 +157,8 @@ export const handleDeleteProduct = async (req, res, next) => {
     }
 };
 
-// Update user by Id
+
+// UPDATE PRODUCT BY ID
 export const handleUpdateProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;

@@ -1,13 +1,14 @@
 import nodemailer from "nodemailer";
+
 import { smtpPassword, smtpUsername } from "../secret.js";
 
 
 
-// Configure the transport mechanism for nodemailer
+// CONFIGURE THE TRANSPORT MECHANISM FOR NODEMAILER
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
-    secure: false, // true for port 465, false for other ports like 587
+    secure: false,
     auth: {
         user: smtpUsername,
         pass: smtpPassword,
@@ -15,29 +16,25 @@ const transporter = nodemailer.createTransport({
 });
 
 
-
-// Function to send email using the configured transporter
+// FUNCTION TO SEND EMAIL USING THE CONFIGURED TRANSPORTER
 const emailWithNodeMailer = async (emailData) => {
     try {
         const mailOptions = {
-            from: smtpUsername, // sender email address
-            to: emailData.email, // receiver's email address
-            subject: emailData.subject, // email subject
-            html: emailData.html // email body content (HTML format)
+            from: smtpUsername,
+            to: emailData.email,
+            subject: emailData.subject,
+            html: emailData.html
         };
 
-        // Send the email and wait for the result
+        // SEND THE MAIL AND WAIT FOR THE RESULT
         const info = await transporter.sendMail(mailOptions);
-        console.log(`Message sent: ${info.response}`);
-
-        return info; // Optional: return the info if needed for further processing
+        return info;
 
     } catch (error) {
         console.error("Error occurred while sending email:", error);
 
-        // Re-throw the error so that it can be caught by a higher-level handler
         throw new Error("Email failed to send. Please try again later.");
     }
-}
+};
 
 export default emailWithNodeMailer;

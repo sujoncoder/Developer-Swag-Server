@@ -1,5 +1,7 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
+
+// CREATE_JSON_WEB_TOKEN HELPER
 export const createJsonWebToken = (payload, secretKey, expiresIn) => {
     if (typeof payload !== "object" || !payload) {
         throw new Error("Payload must be a non-empty object")
@@ -16,4 +18,4 @@ export const createJsonWebToken = (payload, secretKey, expiresIn) => {
         console.error("Failed to sign in JWT", err)
         throw err;
     }
-}
+};

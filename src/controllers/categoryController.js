@@ -1,12 +1,11 @@
 import createError from "http-errors";
-import slugify from "slugify";
 
 import Category from "../models/categoryModel.js";
 import { successResponse } from "../helpers/responseController.js"
 import { createCategory, deleteCategory, getCategories, getCategory, updateCategory } from "../services/categoryService.js";
 
 
-// Create category
+// CREATE CATEGORY CONTROLLER
 export const handleCreateCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
@@ -29,9 +28,10 @@ export const handleCreateCategory = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
-// Get categories
+
+// GET ALL CATEGORIES
 export const handleGetCategories = async (req, res, next) => {
     try {
         const categories = await getCategories();
@@ -43,9 +43,10 @@ export const handleGetCategories = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
-// Handle Get Category by Slug
+
+// GET CATEGORY BY SLUG
 export const handleGetCategory = async (req, res, next) => {
     try {
         const { slug } = req.params;
@@ -66,9 +67,10 @@ export const handleGetCategory = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
 
-// Get update category
+
+// GET UPDATE CATEGORY BY NAME AND SLUG
 export const handleUpdateCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
@@ -86,9 +88,10 @@ export const handleUpdateCategory = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
-// delete category
+
+// DELETE CATEGORY BY SLUG
 export const handleDeleteCategory = async (req, res, next) => {
     try {
         const { slug } = req.params;
@@ -106,4 +109,4 @@ export const handleDeleteCategory = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};

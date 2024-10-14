@@ -1,6 +1,8 @@
 import { body } from "express-validator";
 
-// Registration validation
+
+
+// REGSITRATION VALIDATE
 export const validateUserRegisteration = [
     body("name")
         .trim()
@@ -44,7 +46,7 @@ export const validateUserRegisteration = [
 ];
 
 
-// Login validation
+// LOGIN VALIDATE
 export const validateUserLogin = [
     body("email")
         .trim()
@@ -64,7 +66,7 @@ export const validateUserLogin = [
 ];
 
 
-// Password update validation
+// PASSWORD UPDATE VALIDATE
 export const validateUserPasswordUpdate = [
     body("oldPassword")
         .trim()
@@ -93,7 +95,7 @@ export const validateUserPasswordUpdate = [
 ];
 
 
-//  Forget password validation
+// FORGET PASSWORD VALIDATE
 export const validateUserForgetPassword = [
     body("email")
         .trim()
@@ -104,7 +106,7 @@ export const validateUserForgetPassword = [
 ];
 
 
-//  Reset password validation
+// RESET PASSWORD VALIDATE
 export const validateUserResetPassword = [
     body("token")
         .trim()

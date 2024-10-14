@@ -1,9 +1,9 @@
-import User from "../models/userModel.js"
-import data from "../data.js"
-import Product from "../models/productModel.js"
+import User from "../models/userModel.js";
+import data from "../data.js";
+import Product from "../models/productModel.js";
 
 
-// Users seed
+// USERS SEED CONTROLLER
 export const seedUsers = async (req, res, next) => {
     try {
         // deleting all existing data
@@ -17,15 +17,14 @@ export const seedUsers = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
-}
+};
 
-// Products seed
+
+// PRODUCTS SEED CONTROLLER
 export const seedProducts = async (req, res, next) => {
     try {
-        // deleting all existing data
         await Product.deleteMany({})
 
-        // inserting all data from seed data
         const products = await Product.insertMany(data.products)
 
         return res.status(201).json(products)
@@ -33,4 +32,4 @@ export const seedProducts = async (req, res, next) => {
         next(error)
 
     }
-}
+};

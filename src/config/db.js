@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
+
 import { dbUrl } from "../secret.js";
 
+
+// DATABASE CONNETION
 const connectDB = async (options = {}) => {
     try {
         const db = await mongoose.connect(dbUrl, options)
@@ -10,6 +13,6 @@ const connectDB = async (options = {}) => {
     } catch (error) {
         console.log("Database Connection Failed. 🥵")
     }
-}
+};
 
 export default connectDB;

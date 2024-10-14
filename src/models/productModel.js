@@ -2,6 +2,8 @@ import { Schema, model } from "mongoose";
 
 import { defaultImagePath } from "../secret.js";
 
+
+// PRODUCT SCHEMA
 const productSchema = new Schema(
     {
         name: {
@@ -65,6 +67,8 @@ const productSchema = new Schema(
     }, { timestamps: true }
 )
 
+
+// PRODUCT MODEL
 const Product = model("Product", productSchema);
 
 export default Product;

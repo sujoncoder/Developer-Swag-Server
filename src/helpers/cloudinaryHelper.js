@@ -1,3 +1,4 @@
+// EXTRACT CLOUDINARY SECURE_URL
 export const publicIdWithOutExtention = async (imageUrl) => {
     try {
         const pathSegments = imageUrl.split("/");

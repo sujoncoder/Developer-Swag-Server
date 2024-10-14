@@ -10,7 +10,7 @@ import sendEmail from "../helpers/sendEmail.js";
 
 
 
-// Handle find all users for admin.
+// FIND ALL USERS ==> ADMIN
 export const findUsers = async (search, limit, page) => {
     try {
         const searchRegExp = new RegExp(".*" + search + ".*", "i");
@@ -46,7 +46,8 @@ export const findUsers = async (search, limit, page) => {
     }
 };
 
-// Handle find user by id for admin.
+
+// FIND A SINGLE USER BY ID ==> ADMIN
 export const findUserById = async (id, options = {}) => {
     try {
         const user = await User.findById(id, options)
@@ -60,15 +61,16 @@ export const findUserById = async (id, options = {}) => {
     }
 };
 
-// Handle update user by ID.
+
+// UPADTE USER INFO BY ID
 export const updateUserById = async (userId, req) => {
     try {
-        const options = { password: 0 }
-        await findUserById(userId, options)
+        const options = { password: 0 };
+        await findUserById(userId, options);
 
-        const updateOptions = { new: true, runValidators: true, context: "query" }
+        const updateOptions = { new: true, runValidators: true, context: "query" };
 
-        let updates = {}
+        let updates = {};
         const allowedFields = ["name", "password", "phone", "address"];
 
         for (const key in req.body) {
@@ -77,7 +79,7 @@ export const updateUserById = async (userId, req) => {
             } else if (key === "email") {
                 throw createError(400, "Email can not be updated")
             }
-        }
+        };
 
         const image = req.file;
 
@@ -103,37 +105,19 @@ export const updateUserById = async (userId, req) => {
     }
 };
 
-// Handle update user password by ID
-// export const deleteUserById = async (id, options = {}) => {
-//     try {
-//         const user = await User.findByIdAndDelete({
-//             _id: id,
-//             isAdmin: false
-//         })
 
-//         if (user && user.image) {
-//             await deleteImage(user.image)
-//         }
-//     } catch (error) {
-//         if (error instanceof mongoose.Error, castError) {
-//             throw createError(400, "Invalid ID")
-//         }
-//         throw error
-//     }
-// }
-
-// handle user password update by Id
+// UPDATE USER PASSWORD BY ID
 export const updateUserPasswordById = async (userId, email, oldPassword, newPassword, confirmedPassword) => {
     try {
-        const user = await User.findOne({ email: email })
+        const user = await User.findOne({ email: email });
 
         if (!user) {
             throw createError(404, "User is not found with this email.")
-        }
+        };
 
         if (newPassword !== confirmedPassword) {
             throw createError(400, "New password and Confirm password did not match.")
-        }
+        };
 
         // compare the password
         const isPasswordMatch = await bcrypt.compare(oldPassword, user.password)
@@ -159,7 +143,8 @@ export const updateUserPasswordById = async (userId, email, oldPassword, newPass
     }
 };
 
-// Handle user forget password by id
+
+// FORGET PASSWORD BY ID
 export const forgetPasswordByEmail = async (email) => {
     try {
         const userData = await User.findOne({ email: email })
@@ -232,7 +217,8 @@ export const forgetPasswordByEmail = async (email) => {
     }
 };
 
-// handle reset user password
+
+// RESET PASSWORD BY ID
 export const resetPassword = async (token, password) => {
     try {
         const decoded = jwt.verify(token, jwtResetPasswordKey)
@@ -257,7 +243,8 @@ export const resetPassword = async (token, password) => {
     }
 };
 
-// Handle user action.
+
+// USER STATUS ==> {IS_ADMIN, IS_BANNED } ==> ADMIN
 export const handleUserAction = async (action, userId) => {
     try {
         let update = {};

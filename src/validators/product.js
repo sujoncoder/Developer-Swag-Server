@@ -1,5 +1,7 @@
 import { body } from "express-validator";
 
+
+// PRODUCT VALIDATE USING EXPRESS VALIDATOR
 export const validateProduct = [
     body("name")
         .trim()

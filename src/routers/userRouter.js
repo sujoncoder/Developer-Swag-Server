@@ -6,10 +6,12 @@ import runValidation from "../validators/index.js";
 import { isAdmin, isLoggedIn, isLoggedOut } from "../middlewares/auth.js"
 import { uploadUserImage } from "../middlewares/uploadFile.js";
 
+
+// EXTRACT USER_ROUTER FROM EXPRESS ROUTER
 const userRouter = express.Router();
 
 
-// Handle process register
+// PROCESS REGISTER ROUTE
 userRouter.post("/process-register",
     uploadUserImage.single("image"),
     isLoggedOut,
@@ -18,34 +20,40 @@ userRouter.post("/process-register",
     handleProcessRegister
 );
 
-// Handle verify user account after sending a email clicking verify link
+
+// VERIFY ROUTE ==> AFTER REGISTER VERIFY USING EMAIL
 userRouter.post("/verify", isLoggedOut, handleActivateUserAccount);
 
-// Handle get users see only admin
+
+// GET ALL USERS ==> ADMIN
 userRouter.get("/", isLoggedIn, isAdmin, handleGetUsers);
 
-// Handle get single user only admin using id
-userRouter.get("/:id([0-9a-fA-F]{24})", isLoggedIn, handleGetUserById);
 
-// Handle user delete her own accoun using id
+// GET SINGLE USER BY ID ==> ADMIN
+userRouter.get("/:id([0-9a-fA-F]{24})", isLoggedIn, isAdmin, handleGetUserById);
+
+
+// DELETE USER BY ID ==> USER
 userRouter.delete("/:id([0-9a-fA-F]{24})", handleDeleteUserById);
 
-// Handle user upadate her own account using id
+
+// UPDATE USER BY ID ==> USER
 userRouter.put("/:id([0-9a-fA-F]{24})", isLoggedIn, uploadUserImage.single("image"), handleUpdateUserById);
 
-// Handle only admin can banned & unbanned user account
+
+// BAN, UNBAN ACCOUNT BY ID ==> ADMIN
 userRouter.put("/manage-user/:id([0-9a-fA-F]{24})", isLoggedIn, isAdmin, handleManageUserStatusById);
 
 
-// Handle user can update her own account password
+// UPDATE PASSWORD BY ID ==> ADMIN
 userRouter.put("/update-password/:id([0-9a-fA-F]{24})", validateUserPasswordUpdate, runValidation, isLoggedIn, handleUpdatePassword)
 
 
-// Handle user forget password
+// FORGET PASSWORD ==> USER
 userRouter.post("/forget-password", validateUserForgetPassword, runValidation, handleForgetPassword)
 
 
-// Handle reset password
+// RESET PASSWORD ==> USER
 userRouter.put("/reset-password", validateUserResetPassword, runValidation, handleResetPassword)
 
 

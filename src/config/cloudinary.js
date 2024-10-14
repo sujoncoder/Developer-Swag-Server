@@ -1,8 +1,9 @@
 import { v2 as cloudinary } from 'cloudinary';
+
 import { cloudinaryApi, cloudinaryName, cloudinarySecretKey } from '../secret.js';
 
 
-// Configuration
+// CONFIGURATION
 cloudinary.config({
     cloud_name: cloudinaryName,
     api_key: cloudinaryApi,

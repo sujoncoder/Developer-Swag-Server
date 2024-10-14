@@ -1,3 +1,5 @@
+// HERE IS SEED DATA
+
 const data = {
     users: [
         {

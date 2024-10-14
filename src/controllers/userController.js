@@ -13,7 +13,7 @@ import cloudinary from "../config/cloudinary.js";
 import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
 
-// Process register
+// PROCESS REGISTER CONTROLLER
 export const handleProcessRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
@@ -108,7 +108,8 @@ export const handleProcessRegister = async (req, res, next) => {
     }
 };
 
-// Verify user account
+
+// PROCESS REGISTER CONTROLLER
 export const handleActivateUserAccount = async (req, res, next) => {
     const token = req.body.token;
 
@@ -148,7 +149,8 @@ export const handleActivateUserAccount = async (req, res, next) => {
     }
 };
 
-// Get all user
+
+// GET ALL USERS
 export const handleGetUsers = async (req, res, next) => {
     try {
         const search = req.query.search || "";
@@ -170,7 +172,8 @@ export const handleGetUsers = async (req, res, next) => {
     }
 };
 
-// Get a single user by ID
+
+// GET SINGLE USER BY ID
 export const handleGetUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -189,7 +192,8 @@ export const handleGetUserById = async (req, res, next) => {
     }
 }
 
-// Delete single user by ID
+
+// DELETE SINGLE USER BY ID
 export const handleDeleteUserById = async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -224,7 +228,8 @@ export const handleDeleteUserById = async (req, res, next) => {
     }
 };
 
-// Update user by Id
+
+// UPDATE USER BY ID
 export const handleUpdateUserById = async (req, res, next) => {
     try {
         const userId = req.params.id;
@@ -284,7 +289,8 @@ export const handleUpdateUserById = async (req, res, next) => {
     }
 };
 
-// Handle manage user status by id
+
+// MANAGE USER STATUS BY ID == BAN, UNBAN ==> ADMIN
 export const handleManageUserStatusById = async (req, res, next) => {
     try {
         const userId = req.params.id;
@@ -302,7 +308,8 @@ export const handleManageUserStatusById = async (req, res, next) => {
     }
 };
 
-// Handle update password
+
+// UPDATE PASSWORD CONTROLLER
 export const handleUpdatePassword = async (req, res, next) => {
     try {
         const { email, oldPassword, newPassword, confirmedPassword } = req.body;
@@ -321,7 +328,8 @@ export const handleUpdatePassword = async (req, res, next) => {
     }
 };
 
-// Handle forget user password
+
+// FORGET PASSWORD CONTROLLER
 export const handleForgetPassword = async (req, res, next) => {
     try {
         const { email } = req.body;
@@ -338,7 +346,8 @@ export const handleForgetPassword = async (req, res, next) => {
     }
 };
 
-// Handle reset user password
+
+// RESET PASSWORD CONTROLLER
 export const handleResetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;

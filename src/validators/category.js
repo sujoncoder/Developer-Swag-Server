@@ -1,5 +1,7 @@
 import { body } from "express-validator";
 
+
+// CATEGORY VALIDATE USING EXPRESS VALIDATOR
 export const validateCategory = [
     body("name")
         .trim()

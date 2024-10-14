@@ -7,20 +7,23 @@ import { isAdmin, isLoggedIn } from "../middlewares/auth.js"
 
 const categoryRouter = express.Router();
 
-// Create category
+// POST --> /API/V1/CATEGORIES == CREATE A CATEGORY ==> ADMIN
 categoryRouter.post("/", validateCategory, runValidation, isLoggedIn, isAdmin, handleCreateCategory);
 
-// Get categories
+
+// GET --> /API/V1/CATEGORIES == GET ALL CATEGORIES
 categoryRouter.get("/", handleGetCategories);
 
-// Get category
+
+// GET --> /API/V1/CATEGORIES/:SLUG == GET SINGLE CATEGORY
 categoryRouter.get("/:slug", handleGetCategory);
 
-// Update category
+
+// PUT --> /API/V1/CATEGORIES/:SLUG == UPDATE SINGLE CATEGORY ==> ADMIN
 categoryRouter.put("/:slug", validateCategory, runValidation, isLoggedIn, isAdmin, handleUpdateCategory);
 
 
-// Delete category
+// DELETE --> /API/V1/CATEGORIES/:SLUG == DELETE SINGLE CATEGORY ==> ADMIN
 categoryRouter.delete("/:slug", isLoggedIn, isAdmin, handleDeleteCategory);
 
 export default categoryRouter;

@@ -2,35 +2,41 @@ import slugify from "slugify";
 
 import Category from "../models/categoryModel.js";
 
-// create category service.
+
+
+// CREATE CATEGORY
 export const createCategory = async (name) => {
     const newCategory = await Category.create({
         name: name,
         slug: slugify(name)
     })
     return newCategory;
-}
+};
 
-// Get categories service
+
+// GET ALL CATEGORIES
 export const getCategories = async () => {
     return await Category.find({}).select("name slug").lean();
-}
+};
 
-// Gat category
+
+// GET SINGLE CATEGORY BY SLUG
 export const getCategory = async (slug) => {
     return await Category.findOne({ slug }).select("name slug").lean();
-}
+};
 
-// Update category
+
+// UPDATE CATEGORY
 export const updateCategory = async (name, slug) => {
     const updateCategory = await Category.findOneAndUpdate({ slug }, { $set: { name: name, slug: slugify(name) } }, { new: true })
 
     return updateCategory;
-}
+};
 
-// Delete category
+
+// DELETE CATEGORY
 export const deleteCategory = async (slug) => {
     const result = await Category.findOneAndDelete({ slug });
 
     return result;
-}
+};

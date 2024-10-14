@@ -1,13 +1,14 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
 
-
-
 import { defaultImagePath } from "../secret.js";
 
 
+// EMAIL REGEX
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+
+// USER SCHEMA
 const userSchema = new Schema({
     name: {
         type: String,
@@ -58,6 +59,8 @@ const userSchema = new Schema({
     }
 }, { timestamps: true });
 
+
+// USER MODEL
 const User = model("Users", userSchema);
 
 export default User;

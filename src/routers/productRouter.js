@@ -4,25 +4,29 @@ import { uploadProductImage } from "../middlewares/uploadFile.js";
 import { isLoggedIn, isAdmin } from "../middlewares/auth.js";
 import { handleGetAllProducts, handleCreateProduct, handleGetProduct, handleDeleteProduct, handleUpdateProduct } from "../controllers/productController.js";
 
+
+
+// EXTRACT PRODUCT_ROUTER FROM EXPRESS ROUTER
 const productRouter = express.Router();
 
-// POST --> /api/v1/products  == Create a products.
+// POST --> /API/V1/PRODUCTS == CREATE A PRODUCT ==> ADMIN
 productRouter.post("/", isLoggedIn, isAdmin, uploadProductImage.single("image"), handleCreateProduct);
 
-// GET --> /api/v1/products  == Get all products.
+
+// GET --> /API/V1/PRODUCTS == GET ALL PRODUCTS
 productRouter.get("/", handleGetAllProducts);
 
-// GET --> /api/v1/products/:slug  == Get single product.
+
+// GET --> /API/V1/PRODUCTS/:SLUG == GET SINGLE PRODUCT
 productRouter.get("/:slug", handleGetProduct);
 
-// DELETE --> /api/v1/products/:slug  == Delete single product.
+
+// DELETE --> /API/V1/PRODUCTS/:SLUG == DELETE SINGLE PRODUCT ==> ADMIN
 productRouter.delete("/:slug", isLoggedIn, isAdmin, handleDeleteProduct);
 
-// PUT --> /api/v1/products/:slug  == Update a single product.
+
+// PUT --> /API/V1/PRODUCTS/:SLUG == UPDATE SINGLE PRODUCT ==> ADMIN
 productRouter.put("/:slug", isLoggedIn, isAdmin, uploadProductImage.single("image"), handleUpdateProduct);
-
-
-
 
 
 export default productRouter;
