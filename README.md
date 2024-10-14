@@ -20,7 +20,21 @@
 ## 👨‍💻 Technologies 
 ```
 const technologies = {
-  dependencies: ["Node.js","Express.js","Mongoose","Multer","Cloudinary","JSON Web Token (JWT)","bcrypt","Nodemailer","dotenv","cookie-parser","express-rate-limit","express-validator","http-errors","slugify"],
+  dependencies: [
+  "Node.js",
+  "Express.js",
+  "Mongoose",
+  "Multer",
+  "Cloudinary",
+  "JSON Web Token (JWT)",
+  "bcrypt",
+  "Nodemailer",
+  "dotenv",
+  "cookie-parser",
+  "express-rate-limit","express-validator",
+  "http-errors",
+  "slugify"
+  ],
   devDependencies: [
     "morgan","nodemon"
   ]
@@ -28,9 +42,9 @@ const technologies = {
 ```
 
 ## 📫 Contact
-### Author: Sujon Sheikh
-### Email: sujonsheikh.dev@example.com
-### LinkedIn: https://linkedin.com/in/sujonsheikh
-### GitHub: https://github.com/sujoncoder
-### portfolio: https://sujon-sheikh.vercel.app/
+#### Author: Sujon Sheikh
+#### Email: sujonsheikh.dev@gmail.com
+#### LinkedIn: https://linkedin.com/in/sujonsheikh
+#### GitHub: https://github.com/sujoncoder
+#### portfolio: https://sujon-sheikh.vercel.app/
 
