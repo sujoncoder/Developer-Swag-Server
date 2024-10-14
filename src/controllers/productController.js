@@ -3,7 +3,6 @@ import slugify from "slugify";
 
 import { successResponse } from "../helpers/responseController.js"
 import Product from "../models/productModel.js";
-import deleteImage from "../helpers/deleteImage.js";
 import cloudinary from "../config/cloudinary.js";
 import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
@@ -61,7 +60,6 @@ export const handleCreateProduct = async (req, res, next) => {
         next(error);
     }
 };
-
 
 // Handle Get All Products
 export const handleGetAllProducts = async (req, res, next) => {
@@ -173,35 +171,38 @@ export const handleUpdateProduct = async (req, res, next) => {
                 }
                 updates[key] = req.body[key];
             }
-        }
+        };
 
         // Find the product first to check the current image
         const product = await Product.findOne({ slug });
         if (!product) {
             throw createError(404, "Product with this slug does not exist");
-        }
+        };
 
         // Handle file upload (if a new image is uploaded)
-        if (req.file) {
-            const image = req.file.path;
+        const image = req.file?.path;
 
-            if (req.file.size > 1024 * 1024 * 2) {
+        if (image) {
+
+            if (image.size > 1024 * 1024 * 2) {
                 throw createError(400, "File too large. It must be less than 2 MB");
-            }
+            };
 
-            updates.image = image;
+            const response = await cloudinary.uploader.upload(image, { folder: "DeveloperSwags/products" });
 
-            // Delete the old image if it's not the default one
-            if (product.image && product.image !== "default.jpeg") {
-                deleteImage(product.image); // This should be a function to delete the file
-            }
-        }
+            updates.image = response.secure_url;
+        };
 
         const updatedProduct = await Product.findOneAndUpdate({ slug }, updates, updateOptions);
 
         if (!updatedProduct) {
             throw createError(404, "Product with this slug does not exist");
-        }
+        };
+
+        if (product.image) {
+            const publicId = await publicIdWithOutExtention(product.image);
+            await cloudinary.uploader.destroy(`DeveloperSwags/products/${publicId}`);
+        };
 
         return successResponse(res, {
             statusCode: 200,

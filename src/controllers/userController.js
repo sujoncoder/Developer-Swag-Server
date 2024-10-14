@@ -9,7 +9,6 @@ import { findUserById, findUsers, forgetPasswordByEmail, handleUserAction, reset
 import checkUserExist from "../helpers/checkUserExist.js";
 import sendEmail from "../helpers/sendEmail.js";
 import { findWithId } from "../services/findItem.js";
-import deleteImage from "../helpers/deleteImage.js";
 import cloudinary from "../config/cloudinary.js";
 import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
@@ -213,7 +212,7 @@ export const handleDeleteUserById = async (req, res, next) => {
 
         if (!deletedUser || deletedUser.isAdmin) {
             return res.status(403).json({ message: "Cannot delete admin users" });
-        }
+        };
 
         return successResponse(res, {
             statusCode: 200,
@@ -231,42 +230,48 @@ export const handleUpdateUserById = async (req, res, next) => {
         const userId = req.params.id;
         const options = { password: 0 };
 
+        // Find the user by ID
         const user = await findWithId(User, userId, options);
+        if (!user) {
+            throw createError(404, "User not found");
+        }
 
         const updateOptions = { new: true, runValidators: true, context: "query" };
-
         let updates = {};
-        const allowedFields = ["name", "password", "phone", "address"];
+        const allowedFields = ["name", "password", "phone", "address"];  // Allowed fields for update
 
-        // Validate fields
+        // Validate and update allowed fields
         for (const key in req.body) {
             if (allowedFields.includes(key)) {
                 updates[key] = req.body[key];
             } else if (key === "email") {
-                throw createError(400, "Email cannot be updated");
+                throw createError(400, "Email cannot be updated");  // Prevent email update
             }
-        }
+        };
 
-        // Handle file upload
-        if (req.file) {
-            const image = req.file.path;
-
-            if (req.file.size > 1024 * 1024 * 2) {
-                throw new Error("File too large. It must be less than 2 MB");
+        // Handle file upload (if an image is provided)
+        const image = req.file?.path;
+        if (image) {
+            if (image.size > 1024 * 1024 * 2) {  // Check for file size (2MB limit)
+                throw createError(400, "File too large. It must be less than 2 MB");
             }
 
-            updates.image = image;
+            // Upload image to Cloudinary
+            const response = await cloudinary.uploader.upload(image, { folder: "DeveloperSwags/users" });
+            updates.image = response.secure_url;
+        };
 
-            if (user.image !== "default.jpeg") {
-                deleteImage(user.image);
-            }
-        }
-
+        // Update user with new data
         const updatedUser = await User.findByIdAndUpdate(userId, updates, updateOptions).select("-password");
-
         if (!updatedUser) {
             throw createError(404, "User with this ID does not exist");
         }
+
+        // If the user had a previous image, delete it from Cloudinary
+        if (user.image) {
+            const publicId = await publicIdWithOutExtention(user.image);
+            await cloudinary.uploader.destroy(`DeveloperSwags/users/${publicId}`);
+        };
 
         return successResponse(res, {
             statusCode: 200,
