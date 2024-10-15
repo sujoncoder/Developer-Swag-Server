@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+// CONFIGURE DOTENV
 dotenv.config();
 
 // SERVER PORT

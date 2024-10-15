@@ -67,7 +67,7 @@ export const handleGetAllProducts = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 4;
+        const limit = parseInt(req.query.limit) || 5;
 
         const searchRegExp = new RegExp(".*" + search + ".*", "i");
 
@@ -75,7 +75,7 @@ export const handleGetAllProducts = async (req, res, next) => {
             $or: [
                 { name: { $regex: searchRegExp } },
             ]
-        }
+        };
 
         const products = await Product.find(filter)
             .populate("category")
@@ -83,9 +83,7 @@ export const handleGetAllProducts = async (req, res, next) => {
             .limit(limit)
             .sort({ createdAt: -1 })
 
-        if (!products) {
-            throw createError(404, "No products found")
-        };
+        if (!products || products.length === 0) throw createError(404, "No products found !");
 
         const count = await Product.find(filter).countDocuments();
 

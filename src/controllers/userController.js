@@ -1,11 +1,12 @@
 import createError from "http-errors";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+
 
 import User from "../models/userModel.js"
 import { successResponse } from "../helpers/responseController.js";
 import { createJsonWebToken } from "../helpers/jsonWebToken.js";
-import { clientUrl, jwtActivitionKey } from "../secret.js";
-import { findUserById, findUsers, forgetPasswordByEmail, handleUserAction, resetPassword, updateUserPasswordById } from "../services/userService.js";
+import { clientUrl, jwtActivitionKey, jwtResetPasswordKey } from "../secret.js";
 import checkUserExist from "../helpers/checkUserExist.js";
 import sendEmail from "../helpers/sendEmail.js";
 import { findWithId } from "../services/findItem.js";
@@ -109,13 +110,13 @@ export const handleProcessRegister = async (req, res, next) => {
 };
 
 
-// PROCESS REGISTER CONTROLLER
+// ACCOUNT ACTIVITION CONTROLLER
 export const handleActivateUserAccount = async (req, res, next) => {
     const token = req.body.token;
 
     if (!token) {
         return next(createError(404, "Token not found!"));
-    }
+    };
 
     try {
         const decoded = jwt.verify(token, jwtActivitionKey);
@@ -145,28 +146,49 @@ export const handleActivateUserAccount = async (req, res, next) => {
             message: "User was registered successfully.",
         });
     } catch (error) {
-        return next(error);
+        next(error);
     }
 };
 
 
-// GET ALL USERS
+// GET ALL USERS ==> ADMIN
 export const handleGetUsers = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 5;
 
-        const { users, pagination } = await findUsers(search, limit, page)
+        const searchRegExp = new RegExp(".*" + search + ".*", "i");
+
+        const filter = {
+            isAdmin: { $ne: true },
+            $or: [
+                { name: { $regex: searchRegExp } },
+                { email: { $regex: searchRegExp } },
+                { phone: { $regex: searchRegExp } },
+            ]
+        };
+
+        const options = { password: 0 };
+        const users = await User.find(filter, options).limit(limit).skip((page - 1) * limit);
+
+        const count = await User.find(filter).countDocuments();
+
+        if (!users || users.length === 0) throw createError(404, "No user found !");
 
         return successResponse(res, {
             statusCode: 200,
             message: "User were returned successfully",
             payload: {
                 users: users,
-                pagination: pagination
+                pagination: {
+                    totalPages: Math.ceil(count / limit),
+                    currentPage: page,
+                    previousPage: page - 1 > 0 ? page - 1 : null,
+                    nextPage: page + 1 <= Math.ceil(count / limit) ? page + 1 : null
+                }
             }
-        })
+        });
     } catch (error) {
         next(error)
     }
@@ -179,18 +201,19 @@ export const handleGetUserById = async (req, res, next) => {
         const id = req.params.id;
         const options = { password: 0 };
 
-        const user = await findUserById(id, options)
+        const user = await User.findById(id, options);
+
+        if (!user) throw createError(404, "user was not found");
 
         return successResponse(res, {
             statusCode: 200,
             message: "User was returned successfully",
             payload: { user }
-        })
+        });
     } catch (error) {
-
         next(error)
     }
-}
+};
 
 
 // DELETE SINGLE USER BY ID
@@ -290,18 +313,37 @@ export const handleUpdateUserById = async (req, res, next) => {
 };
 
 
-// MANAGE USER STATUS BY ID == BAN, UNBAN ==> ADMIN
+// MANAGE USER STATUS BY ID == { BAN, UNBAN }==> ADMIN
 export const handleManageUserStatusById = async (req, res, next) => {
     try {
         const userId = req.params.id;
         const action = req.body.action;
 
-        const successMessage = await handleUserAction(action, userId)
+        let update = {};
+        let successMessage;
+
+        if (action === "ban") {
+            update = { isBanned: true }
+            successMessage = "User was banned successfully"
+        } else if (action === "unban") {
+            update = { isBanned: false }
+            successMessage = "User was Unbanned successfully"
+        } else {
+            throw createError(400, 'Invalid action use "ban" or "unban" ')
+        };
+
+        const updateOptions = { new: true, runValidators: true, context: "query" };
+
+        const updatedUser = await User.findByIdAndUpdate(userId, update, updateOptions).select("-password");
+
+        if (!updatedUser) {
+            throw createError(404, "user was not banned successfully.")
+        };
 
         return successResponse(res, {
             statusCode: 200,
             message: successMessage,
-        })
+        });
 
     } catch (error) {
         return (next)
@@ -309,32 +351,109 @@ export const handleManageUserStatusById = async (req, res, next) => {
 };
 
 
-// UPDATE PASSWORD CONTROLLER
+// UPDATE USER PASSWORD BY ID & EMAIL
 export const handleUpdatePassword = async (req, res, next) => {
     try {
         const { email, oldPassword, newPassword, confirmedPassword } = req.body;
 
         const userId = req.params.id;
 
-        const updatedUser = await updateUserPasswordById(userId, email, oldPassword, newPassword, confirmedPassword)
+        const user = await User.findOne({ email: email });
+
+        if (!user) {
+            throw createError(404, "User is not found with this email.")
+        };
+
+        if (newPassword !== confirmedPassword) {
+            throw createError(400, "New password and Confirm password did not match.")
+        };
+
+        // compare the password
+        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password)
+        if (!isPasswordMatch) {
+            throw createError(400, "Old password is incorrect")
+        };
+
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { password: newPassword },
+            { new: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+            throw createError(400, "user was not updated successfully")
+        };
 
         return successResponse(res, {
             statusCode: 200,
             message: "User password updated successfully",
             payload: { updatedUser }
-        })
+        });
     } catch (error) {
         next(error)
     }
 };
 
 
-// FORGET PASSWORD CONTROLLER
+// FORGET PASSWORD USING EMAIL
 export const handleForgetPassword = async (req, res, next) => {
     try {
         const { email } = req.body;
 
-        const token = await forgetPasswordByEmail(email)
+        const userData = await User.findOne({ email: email })
+
+        if (!userData) {
+            throw createError(404, "Email is incorrect. You have not verifyed your email address, please register first.")
+        };
+
+        // create token
+        const token = createJsonWebToken({ email }, jwtResetPasswordKey, "10m");
+
+
+        // Prepare email
+        const emailData = {
+            email,
+            subject: "🔒 Reset Your Developer Swags Password",
+            html: `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; padding: 30px; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="https://cdn-icons-png.flaticon.com/512/4997/4997543.png" alt="Developer Swags" style="width: 120px; margin-bottom: 10px;">
+                <h1 style="color: #007bff; font-size: 24px;">Reset Your Password</h1>
+            </div>
+
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                Hello <strong>${userData.name}</strong>,
+            </p>
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                We received a request to reset your Developer Swags account password. If you did not make this request, please ignore this email.
+            </p>
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                To reset your password, click the button below:
+            </p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${clientUrl}/api/v1/users/reset-password/${token}" target="_blank" style="display: inline-block; background-color: #007bff; color: white; font-size: 16px; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                    Reset Password
+                </a>
+            </div>
+            <p style="font-size: 14px; color: #888; line-height: 1.6;">
+                If you did not request a password reset, please ignore this email or contact our support.
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 40px 0;">
+
+            <div style="text-align: center;">
+                <p style="font-size: 12px; color: #aaa;">Need help? Contact us at <a href="mailto:support@developerswags.com" style="color: #007bff; text-decoration: none;">support@developerswags.com</a></p>
+                <p style="font-size: 12px; color: #aaa;">&copy; 2024 Developer Swags. All Rights Reserved.</p>
+                <div style="margin-top: 10px;">
+                </div>
+            </div>
+        </div>
+    </div>  `};
+
+        // send mail with node mailer
+        sendEmail(emailData)
 
         return successResponse(res, {
             statusCode: 200,
@@ -351,12 +470,26 @@ export const handleForgetPassword = async (req, res, next) => {
 export const handleResetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;
-        await resetPassword(token, password);
+        const decoded = jwt.verify(token, jwtResetPasswordKey)
+
+        if (!decoded) {
+            throw createError(400, "Invalid or expired token")
+        };
+
+        const filter = { email: decoded.email };
+        const update = { password: password };
+        const options = { new: true }
+
+        const updatedUser = await User.findOneAndUpdate(filter, update, options).select("-password")
+
+        if (!updatedUser) {
+            throw createError(400, "Password reset fail.")
+        };
 
         return successResponse(res, {
             statusCode: 200,
             message: "Password reset successfully",
-        })
+        });
     } catch (error) {
         next(error)
     }
