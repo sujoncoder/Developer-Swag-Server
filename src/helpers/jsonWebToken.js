@@ -9,7 +9,7 @@ export const createJsonWebToken = (payload, secretKey, expiresIn) => {
 
     if (typeof secretKey !== "string" || secretKey === "") {
         throw new Error("Secret key must be a non empty string")
-    }
+    };
 
     try {
         const token = jwt.sign(payload, secretKey, { expiresIn });

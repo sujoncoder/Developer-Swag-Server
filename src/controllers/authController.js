@@ -10,7 +10,7 @@ import { setAccessTokenCookie, setRefreshTokenCookie } from "../helpers/cookies.
 
 
 // Handle login
-export const handleLogin = async (req, res, next) => {
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
@@ -18,9 +18,9 @@ export const handleLogin = async (req, res, next) => {
 
         if (!user) {
             throw createError(404, "User does not exist with this email. Please register first.")
-        }
+        };
 
-        const isPasswordMatch = await bcrypt.compare(password, user.password)
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
 
         if (!isPasswordMatch) {
             throw createError(401, "Creadential did not match")
@@ -28,17 +28,19 @@ export const handleLogin = async (req, res, next) => {
 
         if (user.isBanned) {
             throw createError(403, "You are Banned. Please contact authority.")
-        }
+        };
 
         // create access token
         const accessToken = createJsonWebToken({ user }, jwtAccessKey, "5m"
-        )
+        );
+
         setAccessTokenCookie(res, accessToken)
 
         // create refresh token
         const refreshToken = createJsonWebToken({ user }, jwtRefreshKey, "7d"
-        )
-        setRefreshTokenCookie(res, refreshToken)
+        );
+
+        setRefreshTokenCookie(res, refreshToken);
 
 
         const userWithOutPassword = user.toObject();
@@ -55,7 +57,7 @@ export const handleLogin = async (req, res, next) => {
 };
 
 // Handle logout
-export const handleLogout = async (req, res, next) => {
+export const logout = async (req, res, next) => {
     try {
         res.clearCookie("accessToken")
         res.clearCookie("refreshToken")
@@ -63,59 +65,59 @@ export const handleLogout = async (req, res, next) => {
             statusCode: 200,
             message: "User logout Successfully",
             payload: {}
-        })
+        });
     } catch (error) {
         next(error)
     }
 };
 
 // Handle refresh token
-export const handleRefreshToken = async (req, res, next) => {
+export const refreshToken = async (req, res, next) => {
     try {
         const oldRefreshToken = req.cookies.refreshToken;
         // verify the old refresh token
-        const decodedToken = jwt.verify(oldRefreshToken, jwtRefreshKey)
+        const decodedToken = jwt.verify(oldRefreshToken, jwtRefreshKey);
 
         if (!decodedToken) {
             throw createError(401, "Invalid refresh token. Please login")
-        }
+        };
 
         // create access token
         const accessToken = createJsonWebToken(
             decodedToken.user,
             jwtAccessKey,
             "5m"
-        )
+        );
 
-        setAccessTokenCookie(res, accessToken)
+        setAccessTokenCookie(res, accessToken);
 
         return successResponse(res, {
             statusCode: 200,
             message: "New access token is generated",
             payload: {}
-        })
+        });
     } catch (error) {
         next(error)
     }
 };
 
 // Handle protected route
-export const handleProtectedRoute = async (req, res, next) => {
+export const protectedRoute = async (req, res, next) => {
     try {
         const accessToken = req.cookies.accessToken;
-        const decodedToken = jwt.verify(accessToken, jwtAccessKey)
+        const decodedToken = jwt.verify(accessToken, jwtAccessKey);
 
         if (!decodedToken) {
             throw createError(401, "Invalid access token. Please login first")
-        }
+        };
 
         return successResponse(res, {
             statusCode: 200,
             message: "Protected resources accessed successfull",
             payload: {}
-        })
+        });
 
     } catch (error) {
         next(error)
     }
-}
+};

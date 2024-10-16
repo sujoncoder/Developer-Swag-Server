@@ -8,7 +8,7 @@ import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
 
 // CREATE PRODUCT ==> ADMIN
-export const handleCreateProduct = async (req, res, next) => {
+export const createProduct = async (req, res, next) => {
     try {
         // Extract product data from req.body
         const { name, description, price, category, shipping, quantity } = req.body;
@@ -63,7 +63,7 @@ export const handleCreateProduct = async (req, res, next) => {
 
 
 // GET ALL PRODUCTS
-export const handleGetAllProducts = async (req, res, next) => {
+export const getAllProducts = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = parseInt(req.query.page) || 1;
@@ -108,7 +108,7 @@ export const handleGetAllProducts = async (req, res, next) => {
 
 
 // GET SINGLE PRODUCT BY SLUG
-export const handleGetProduct = async (req, res, next) => {
+export const getSingleProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
         const product = await Product.findOne({ slug }).populate("category")
@@ -129,7 +129,7 @@ export const handleGetProduct = async (req, res, next) => {
 
 
 // DELETE SINGLE PRODUCT BY SLUG
-export const handleDeleteProduct = async (req, res, next) => {
+export const deleteProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
 
@@ -157,7 +157,7 @@ export const handleDeleteProduct = async (req, res, next) => {
 
 
 // UPDATE PRODUCT BY ID
-export const handleUpdateProduct = async (req, res, next) => {
+export const updateProduct = async (req, res, next) => {
     try {
         const { slug } = req.params;
         const updateOptions = { new: true, runValidators: true, context: "query" };

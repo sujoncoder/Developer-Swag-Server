@@ -15,7 +15,7 @@ import { publicIdWithOutExtention } from "../helpers/cloudinaryHelper.js";
 
 
 // PROCESS REGISTER CONTROLLER
-export const handleProcessRegister = async (req, res, next) => {
+export const processRegister = async (req, res, next) => {
     try {
         const { name, email, password, phone, address } = req.body;
 
@@ -111,7 +111,7 @@ export const handleProcessRegister = async (req, res, next) => {
 
 
 // ACCOUNT ACTIVITION CONTROLLER
-export const handleActivateUserAccount = async (req, res, next) => {
+export const activateUserAccount = async (req, res, next) => {
     const token = req.body.token;
 
     if (!token) {
@@ -152,7 +152,7 @@ export const handleActivateUserAccount = async (req, res, next) => {
 
 
 // GET ALL USERS ==> ADMIN
-export const handleGetUsers = async (req, res, next) => {
+export const getAllUsers = async (req, res, next) => {
     try {
         const search = req.query.search || "";
         const page = Number(req.query.page) || 1;
@@ -196,7 +196,7 @@ export const handleGetUsers = async (req, res, next) => {
 
 
 // GET SINGLE USER BY ID
-export const handleGetUserById = async (req, res, next) => {
+export const getSingleUser = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -217,7 +217,7 @@ export const handleGetUserById = async (req, res, next) => {
 
 
 // DELETE SINGLE USER BY ID
-export const handleDeleteUserById = async (req, res, next) => {
+export const deleteUser = async (req, res, next) => {
     try {
         const id = req.params.id;
         const options = { password: 0 };
@@ -253,7 +253,7 @@ export const handleDeleteUserById = async (req, res, next) => {
 
 
 // UPDATE USER BY ID
-export const handleUpdateUserById = async (req, res, next) => {
+export const updateUser = async (req, res, next) => {
     try {
         const userId = req.params.id;
         const options = { password: 0 };
@@ -314,7 +314,7 @@ export const handleUpdateUserById = async (req, res, next) => {
 
 
 // MANAGE USER STATUS BY ID == { BAN, UNBAN }==> ADMIN
-export const handleManageUserStatusById = async (req, res, next) => {
+export const manageUserStatus = async (req, res, next) => {
     try {
         const userId = req.params.id;
         const action = req.body.action;
@@ -352,7 +352,7 @@ export const handleManageUserStatusById = async (req, res, next) => {
 
 
 // UPDATE USER PASSWORD BY ID & EMAIL
-export const handleUpdatePassword = async (req, res, next) => {
+export const updatePassword = async (req, res, next) => {
     try {
         const { email, oldPassword, newPassword, confirmedPassword } = req.body;
 
@@ -397,7 +397,7 @@ export const handleUpdatePassword = async (req, res, next) => {
 
 
 // FORGET PASSWORD USING EMAIL
-export const handleForgetPassword = async (req, res, next) => {
+export const forgetPassword = async (req, res, next) => {
     try {
         const { email } = req.body;
 
@@ -467,7 +467,7 @@ export const handleForgetPassword = async (req, res, next) => {
 
 
 // RESET PASSWORD CONTROLLER
-export const handleResetPassword = async (req, res, next) => {
+export const resetPassword = async (req, res, next) => {
     try {
         const { token, password } = req.body;
         const decoded = jwt.verify(token, jwtResetPasswordKey)

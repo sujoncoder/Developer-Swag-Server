@@ -30,6 +30,5 @@ export const seedProducts = async (req, res, next) => {
         return res.status(201).json(products)
     } catch (error) {
         next(error)
-
     }
 };

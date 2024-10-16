@@ -1,13 +1,12 @@
 import createError from "http-errors";
+import slugify from "slugify";
 
 import Category from "../models/categoryModel.js";
 import { successResponse } from "../helpers/responseController.js"
-import { deleteCategory } from "../services/categoryService.js";
-import slugify from "slugify";
 
 
 // CREATE CATEGORY CONTROLLER
-export const handleCreateCategory = async (req, res, next) => {
+export const createCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
 
@@ -35,7 +34,7 @@ export const handleCreateCategory = async (req, res, next) => {
 
 
 // GET ALL CATEGORIES
-export const handleGetCategories = async (req, res, next) => {
+export const getAllCategories = async (req, res, next) => {
     try {
         const categories = await Category.find({}).select("name slug").lean();
 
@@ -51,7 +50,7 @@ export const handleGetCategories = async (req, res, next) => {
 
 
 // GET CATEGORY BY SLUG
-export const handleGetCategory = async (req, res, next) => {
+export const getSingleCategory = async (req, res, next) => {
     try {
         const { slug } = req.params;
 
@@ -74,7 +73,7 @@ export const handleGetCategory = async (req, res, next) => {
 
 
 // GET UPDATE CATEGORY BY NAME AND SLUG
-export const handleUpdateCategory = async (req, res, next) => {
+export const updateCategory = async (req, res, next) => {
     try {
         const { name } = req.body;
         const { slug } = req.params;
@@ -99,7 +98,7 @@ export const handleUpdateCategory = async (req, res, next) => {
 
 
 // DELETE CATEGORY BY SLUG
-export const handleDeleteCategory = async (req, res, next) => {
+export const deleteCategory = async (req, res, next) => {
     try {
         const { slug } = req.params;
 
