@@ -1,8 +1,11 @@
-# **Wellcome To Developer Swags Frontend👨‍💻**
+# **Wellcome To Developer Swags👨‍💻**
 ----------------------
 
 ## Developer swags an e-commerce store for every developers.
 -- Developer can buy her favourite code sticker, t-shirt, caps etc. 👨‍💻
+
+## Technologies
+MERN Stack
 
 
 ## 📫 Contact
